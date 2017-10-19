@@ -21,6 +21,7 @@
   "dependencies": {
     "config": "^1.27.0",
     "koa": "^2.3.0",
+    "koa-body": "^2.5.0",
     "lodash": "^4.17.4"
   },
   "devDependencies": {
