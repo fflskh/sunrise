@@ -1,0 +1,31 @@
+{
+  "name": "sunrise",
+  "version": "1.0.0",
+  "description": "Sun Rise Every Day!",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fflskh/sunrise.git"
+  },
+  "author": "liuh",
+  "license": "MIT",
+  "keywords": [
+    "node",
+    "api",
+    "koa2"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "config": "^1.27.0",
+    "koa": "^2.3.0",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.0.1",
+    "eslint": "^4.9.0",
+    "eslint-plugin-react": "^7.4.0"
+  }
+}
