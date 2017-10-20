@@ -20,7 +20,8 @@
     "globals":{
         "_base": true,
         "_": true,
-        "_config": true
+        "_config": true,
+        "_logger": true
     },
     "rules": {
         "indent": [

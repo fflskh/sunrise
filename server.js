@@ -5,6 +5,9 @@ const koaBody = require('koa-body');
 require('./lib/init');
 let SERVER_SHUT_DOWN = false;
 
+const errorHandler = require(_base + 'middleware/errorHandler');
+const logger = require(_base + 'middleware/logger');
+
 const app = new Koa();
 
 try{
@@ -12,22 +15,20 @@ try{
         try{
             await next();
         } catch(error){
-            console.log('>>>> error : ', error);
-            ctx.body = 'some error ocurrs';
+            errorHandler(error, ctx);
         }
     });
-    app.use(koaBody());
-    app.use(async (ctx) => {
-        throw new Error('test error.');
-    });
+    app.use(logger());
+    // app.use(koaBody());
     app.use(async function(ctx) {
+        ctx.logger.info('>>>>>');
         ctx.body = 'Welcome to SunRise!';
     });
 
-    app.listen(_config.get('port'));
-    console.log(`Start server, listening on port ${_config.get('port')}`);
+    http.createServer(app.callback()).listen(_config.get('port'));
+    console.info(`Start server, listening on port ${_config.get('port')}`);
 } catch(error) {
-    console.log(error);
+    console.error(error);
 }
 
 // process.once('SIGUSR2', function () {

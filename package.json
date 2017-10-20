@@ -19,6 +19,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "bunyan": "^1.8.12",
     "config": "^1.27.0",
     "koa": "^2.3.0",
     "koa-body": "^2.5.0",
