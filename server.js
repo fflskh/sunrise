@@ -19,14 +19,13 @@ try{
         }
     });
     app.use(logger());
-    // app.use(koaBody());
+    app.use(koaBody());
     app.use(async function(ctx) {
-        ctx.logger.info('>>>>>');
         ctx.body = 'Welcome to SunRise!';
     });
 
     http.createServer(app.callback()).listen(_config.get('port'));
-    console.info(`Start server, listening on port ${_config.get('port')}`);
+    _logger.info(`Start server, listening on port ${_config.get('port')}`);
 } catch(error) {
     console.error(error);
 }

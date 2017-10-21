@@ -21,6 +21,7 @@
         "_base": true,
         "_": true,
         "_config": true,
+        "_utils": true,
         "_logger": true
     },
     "rules": {
