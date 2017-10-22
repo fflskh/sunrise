@@ -25,3 +25,5 @@ function loadDirectory (exports, directory) {
 }
 
 loadDirectory(exports, __dirname);
+loaded = true;
+

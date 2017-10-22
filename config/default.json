@@ -1,5 +1,9 @@
 {
   "appName": "SunRise",
   "port": "3001",
-  "logLevel": "info"
+  "logLevel": "info",
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
+  }
 }

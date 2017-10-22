@@ -1,3 +1,4 @@
+const util = require('util');
 const moment = require('moment');
 
 module.exports = function () {
@@ -22,12 +23,14 @@ module.exports = function () {
                 'x-server-current-time': moment().format('YYYY-MM-DDTHH:mm:ssZ'),
                 code: error.statusCode || 400,
                 message: error.message || '',
-                data: error.data
+                data: error.data || null
             };
 
             if(!_utils.isProductionMode) {
                 body.meta.stack = error.stack;
             }
+
+            ctx.logger.info(`===> response: ${util.inspect(body, {depth: 3})}`);
 
             ctx.status = 200;
             ctx.body = body;

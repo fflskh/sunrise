@@ -6,16 +6,8 @@ module.exports = function () {
         let body = ctx.body;
         let response = {};
 
-        //没有response，直接返回404
-        if(!body) {
-            ctx.status = 404;
-            return Promise.resolve();
-        }
-
-        if(body instanceof Error) {
-            throw body;
-        }
-
+        //默认status为200
+        ctx.status = 200;
         //非产品环境下才打印request信息
         if(!_utils.isProductionMode) {
             response.request = {
@@ -31,11 +23,17 @@ module.exports = function () {
             code: 200
         };
 
-        response.response = body;
+        //没有response，直接返回404
+        if(!body) {
+            response.meta.code = 404;
+            ctx.status = 404;
+        } else if(body instanceof Error) {
+            throw body;
+        } else {
+            response.response = body;
+        }
 
         ctx.logger.info(`===> response: ${util.inspect(response, {depth: 3})}`);
-
-        ctx.status = 200;
         ctx.body = response;
     };
 };

@@ -6,7 +6,6 @@ const path = require('path');
 const Router = require('koa-router');
 
 function loadRouters (router, directory) {
-    _logger.info(`load routers from : ${directory}`);
     fs.readdirSync(directory).forEach(filename => {
         //跳过index.js和非js文件
         if(filename === 'index.js') {

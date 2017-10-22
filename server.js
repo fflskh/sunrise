@@ -19,8 +19,9 @@ try{
     //db
 
     //cache
+    app.use(middleware.redisConnector(_config.get('redis')));
 
-    //router
+    //register router
     registerRouters(app, __dirname+'/routers');
 
     app.use(middleware.responder());
@@ -32,13 +33,13 @@ try{
     console.error(error);
 }
 
-// process.once('SIGUSR2', function () {
-//     console.log('start to close http server.');
-//     SERVER_SHUT_DOWN = true;
-//     setTimeout(() => {
-//         // 15000ms later the process kill it self to allow a restart
-//         console.log('worker closed.');
-//         process.exit(0);
-//     }, 15000);
-//     console.log('receive system shutdown');
-// });
+process.once('SIGUSR2', function () {
+    console.log('start to close http server.');
+    SERVER_SHUT_DOWN = true;
+    setTimeout(() => {
+        // 15000ms later the process kill it self to allow a restart
+        console.log('worker closed.');
+        process.exit(0);
+    }, 15000);
+    console.log('receive system shutdown');
+});
