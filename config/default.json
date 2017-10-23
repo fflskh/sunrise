@@ -5,5 +5,21 @@
   "redis": {
     "host": "127.0.0.1",
     "port": 6379
+  },
+  "mongodb": {
+    "uri": "mongodb://localhost:27017/sunrise",
+    "options": {
+      "useMongoClient": true,
+      "autoIndex": false,
+      "reconnectTries": 15,
+      "reconnectInterval": 500,
+      "poolSize": 50,
+      "keepAlive": 120
+    },
+    "schemaOpts": {
+      "minimize": false,
+      "versionKey": false,
+      "timestamps": true
+    }
   }
 }

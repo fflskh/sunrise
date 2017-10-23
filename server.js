@@ -17,10 +17,9 @@ try{
     app.use(middleware.requestLogger());
 
     //db
-
+    app.use(middleware.mongoConnector(_config.get('mongodb')));
     //cache
     app.use(middleware.redisConnector(_config.get('redis')));
-
     //register router
     registerRouters(app, __dirname+'/routers');
 

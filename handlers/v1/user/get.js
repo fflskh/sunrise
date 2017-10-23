@@ -20,13 +20,9 @@ class Handler {
         this.validateParams(ctx);
         params = this.getParams(ctx);
 
-        await ctx.redisClient.setAsync('foo', 'xxxxxxxxxxxx');
-        let cache = await ctx.redisClient.getAsync('foo');
+        let user = await userDao.getById(params.userId);
 
-        console.log('cache : ', cache);
-        ctx.body = {
-            id: params.userId
-        };
+        ctx.body = user;
 
         // ctx.body = await userDao.getById(params.userId);
         await next();
