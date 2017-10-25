@@ -22,7 +22,11 @@
         "_": true,
         "_config": true,
         "_utils": true,
-        "_logger": true
+        "_logger": true,
+        "describe": true,
+        "before": true,
+        "after": true,
+        "it": true
     },
     "rules": {
         "indent": [

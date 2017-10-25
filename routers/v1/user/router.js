@@ -5,4 +5,9 @@ module.exports = function (router) {
         '/users/:userId',
         handlerLoader('handlers.v1.user.get')
     );
+
+    router.post(
+        '/users',
+        handlerLoader('handlers.v1.user.post')
+    );
 };

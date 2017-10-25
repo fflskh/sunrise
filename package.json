@@ -30,8 +30,12 @@
     "redis": "^2.8.0"
   },
   "devDependencies": {
+    "ava": "^0.23.0",
     "babel-eslint": "^8.0.1",
     "eslint": "^4.9.0",
-    "eslint-plugin-react": "^7.4.0"
+    "eslint-plugin-react": "^7.4.0",
+    "mocha": "^4.0.1",
+    "should": "^13.1.2",
+    "supertest": "^3.0.0"
   }
 }

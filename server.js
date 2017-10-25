@@ -42,3 +42,5 @@ process.once('SIGUSR2', function () {
     }, 15000);
     console.log('receive system shutdown');
 });
+
+module.exports = app;

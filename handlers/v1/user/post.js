@@ -13,10 +13,10 @@ class Handler {
     static getParams (ctx) {
         let body = ctx.request.body;
         return {
-            userId: body.userId,
+            userId: parseInt(body.userId, 10),
             firstname: body.firstname,
             lastname: body.lastname,
-            age: body.age,
+            age: parseInt(body.age, 10),
             isMember: body.isMember,
             address: body.address
         };

@@ -4,7 +4,6 @@ const User = require(_base + 'controllers/User');
 
 class Handler {
     static validateParams (ctx) {
-
     }
 
     static getParams (ctx) {
@@ -20,7 +19,7 @@ class Handler {
         this.validateParams(ctx);
         params = this.getParams(ctx);
 
-        let user = await userDao.getById(params.userId);
+        let user = await userDao.getByUserId(params.userId);
 
         ctx.body = user;
 

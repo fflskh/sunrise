@@ -23,6 +23,18 @@ class User {
 
         return await userModel.save();
     }
+
+    async getByUserId (userId) {
+        return await new Promise((resolve, reject) => {
+            UserModel.findOne({userId: userId}, function (error, results) {
+                if(error) {
+                    return reject(error);
+                }
+
+                resolve(results);
+            });
+        });
+    }
 }
 
 module.exports = User;
