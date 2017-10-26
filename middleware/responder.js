@@ -34,6 +34,7 @@ module.exports = function () {
         }
 
         ctx.logger.info(`===> response: ${util.inspect(response, {depth: 3})}`);
+        ctx.logger.info(`used time: ${new Date() - ctx.context.requestTime} millisecond.`);
         ctx.body = response;
     };
 };

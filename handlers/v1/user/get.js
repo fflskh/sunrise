@@ -8,22 +8,27 @@ class Handler {
 
     static getParams (ctx) {
         return {
-            userId: ctx.params.userId
+            userId: parseInt(ctx.params.userId, 10)
         };
     }
 
     static async execute (ctx, next) {
+        let context = ctx.context;
+        let userDao = new User(context);
         let params;
-        let userDao = new User();
 
         this.validateParams(ctx);
         params = this.getParams(ctx);
 
         let user = await userDao.getByUserId(params.userId);
 
+        //response statusCode的返回应该放在handler中完成
+        if(!user) {
+            ctx.logger.warn(`user with ID: ${params.userId} does not exist.`);
+        }
+
         ctx.body = user;
 
-        // ctx.body = await userDao.getById(params.userId);
         await next();
     }
 }

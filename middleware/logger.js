@@ -10,7 +10,7 @@ module.exports = () => {
             });
         }
 
-        ctx.logger = _logger.child({
+        ctx.context.logger = ctx.logger = _logger.child({
             ip: ctx.ip,
             'request-line': ctx.method + ' ' + ctx.url + ' HTTP/' + ctx.req.httpVersion
         });

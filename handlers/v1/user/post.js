@@ -23,8 +23,9 @@ class Handler {
     }
 
     static async execute (ctx, next) {
+        let context = ctx.context;
+        let userDao = new User(context);
         let params;
-        let userDao = new User();
 
         this.validateParams(ctx);
         params = this.getParams(ctx);

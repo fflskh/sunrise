@@ -11,8 +11,8 @@ describe('User model ',function(){
         done();
     });
 
-    describe(' create user ', function () {
-        it('should be ok ', function (done) {
+    describe('create user ', function () {
+        it('get user should be ok ', function (done) {
             agent.get('/api/v1/users/1001')
                 .set('content-type', 'application/json')
                 .set('x-request-id', '8bf14a542d5847bbb880039a59bf23421')

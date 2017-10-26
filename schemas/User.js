@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+mongoose.Promise = global.Promise;
+
 const userSchema = new Schema({
     userId: {type: Number},
     firstname: {type: String},
@@ -10,7 +12,7 @@ const userSchema = new Schema({
     address: {type: Schema.Types.Mixed},
     funcs: [{type: Schema.Types.Mixed}]
 }, {
-    // autoIndex: false, //自动建立索引，每次程序启动时，建立一次索引。所以，dev环境打开，product环境关闭
+    // autoIndex: false, //自动建立索引，每次程序启动时，建立一次索引。所以，product环境必须关闭
     collection: 'users', //默认取model name的负数为collection name，该选项用于手动指定collection name
     minimize: _config.get('mongodb.schemaOpts.minimize'), //默认不会将空对象"{}"写入db。置为false，将空对象写入db
     versionKey: _config.get('mongodb.schemaOpts.versionKey'), //每更新一次，则会更新versionKey。若做数据跟踪，则可以置为true。

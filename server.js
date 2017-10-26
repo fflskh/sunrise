@@ -11,18 +11,20 @@ const registerRouters = require(_base + 'routers');
 const app = new Koa();
 
 try{
-    app.use(middleware.errorHandler());
-    app.use(middleware.logger());
     app.use(koaBody());
+    //create context for per request
+    app.use(middleware.contextCreator());
+    app.use(middleware.logger());
+    //error catcher
+    app.use(middleware.errorHandler());
     app.use(middleware.requestLogger());
-
     //db
     app.use(middleware.mongoConnector(_config.get('mongodb')));
     //cache
     app.use(middleware.redisConnector(_config.get('redis')));
     //register router
     registerRouters(app, __dirname+'/routers');
-
+    //unify response
     app.use(middleware.responder());
 
     http.createServer(app.callback()).listen(_config.get('port'));
