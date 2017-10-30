@@ -1,0 +1,13 @@
+{
+  "name": "sunrise",
+  "script": "./server.js",
+  "instances": 0,
+  "exec_mode": "cluster",
+  "merge_logs": true,
+  "run_as_user": "root",
+  "error_file": "/var/log/api/sunrise-err.log",
+  "out_file": "/var/log/api/sunrise-out.log",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
