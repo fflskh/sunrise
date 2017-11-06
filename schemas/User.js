@@ -1,7 +1,4 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
-mongoose.Promise = global.Promise;
+const Schema = require('mongoose').Schema;
 
 const userSchema = new Schema({
     userId: {type: Number},
