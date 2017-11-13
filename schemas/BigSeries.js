@@ -4,6 +4,7 @@
 const Schema = require('mongoose').Schema;
 
 const bigSeriesSchema = new Schema({
+    brandId: {type: Number, desc: '品牌ID'},
     name: {type: String, desc: '大的系列'}
 }, {
     collection: 'bigSeries', //默认取model name的负数为collection name，该选项用于手动指定collection name
