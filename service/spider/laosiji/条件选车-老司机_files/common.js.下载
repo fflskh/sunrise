@@ -1,0 +1,1147 @@
+var userid, username; //用户id 用户名
+var snslisttype; // 0首页 1个人中心  2收藏  3草稿  4at 5微文 6文章  7对方个人中心 8热门节目 9话题 10用户观点 11圈子
+var isLogin = false; //是否登录
+var wh = parseInt(document.documentElement.clientHeight); //屏幕高度
+var dboh = 0,
+	headHeight = 40,
+	footHeight = 0; //main header footer高度
+var uniqueArr = []; //去重数组
+var msgData; // 消息计数
+var allowScroll = true; //允许滚动加载
+//ie兼容
+var indexOf = Array.prototype.indexOf;
+if(!Array.prototype.forEach) {
+	Array.prototype.forEach = function forEach(callback, thisArg) {
+		var T, k;
+		if(this == null) {
+			throw new TypeError("this is null or not defined");
+		}
+		var O = Object(this);
+		var len = O.length >>> 0;
+		if(typeof callback !== "function") {
+			throw new TypeError(callback + " is not a function");
+		}
+		if(arguments.length > 1) {
+			T = thisArg;
+		}
+		k = 0;
+		while(k < len) {
+			var kValue;
+			if(k in O) {
+				kValue = O[k];
+				callback.call(T, kValue, k, O);
+			}
+			k++;
+		}
+	};
+}
+
+onKeyEvents(); //键盘事件
+if(document.getElementById("iscars")==null) {
+	refreshed(); //后退刷新
+	
+	rightSideBar(); //右侧底部按钮
+	//滚动
+	setTimeout(function() {
+		scrollLoad();
+		publishPointPlace();
+		rightSetUp();
+	}, 500);
+}
+
+//底部按钮定位
+function publishPointPlace() {
+	if(document.getElementById("publishPoint") != null) {
+		dboh = document.querySelector('.wrapper').querySelector('.main').offsetHeight
+		if(dboh <= (wh - headHeight + footHeight)) {
+			document.getElementById("publishPoint").className = 'publish-point';
+		} else {
+			document.getElementById("publishPoint").className = 'publish-point fixed';
+		}
+	}
+}
+//滚动加载
+function scrollLoad() {
+	//可视窗口的高度
+	var scrollTop = 0;
+	var scrollBottom = 0;
+	window.onscroll = function() {
+//		DomFixed();
+		if(document.getElementById("nav") != null) {
+			var bodyHeight = document.body.offsetHeight;
+			var scrollTop = getScrollTop();
+//			console.log('bodyHeight='+bodyHeight+'scroll='+scrollTop+'headHeight='+headHeight+'result=');
+			if(scrollTop >= headHeight) {
+//				document.querySelector('.scroll-space').className='scroll-space';
+//				document.querySelector('.main').style.paddingTop = '90px';
+				document.querySelector('.header').className = 'header fixed';
+				document.getElementById("nav").className = 'left fixed';
+				document.querySelector('.right-top-bar').className = 'btn btn-default right-top-bar';
+				if(document.getElementById("contRight") != null) {
+					document.getElementById("contRight").parentNode.className = 'right fixed';
+				}
+			} else {
+//				document.querySelector('.scroll-space').className='scroll-space hide';
+				document.querySelector('.main').style.paddingTop = '0px';
+				document.querySelector('.header').className = 'header';
+				document.getElementById("nav").className = 'left';
+				document.querySelector('.right-top-bar').className = 'btn btn-default right-top-bar hide';
+				if(document.getElementById("contRight") != null) {
+					document.getElementById("contRight").parentNode.className = 'right';
+				}
+			}
+			if(document.getElementById("publishPoint") != null) { //发布观点按钮
+				if(bodyHeight - scrollTop - wh <= 260) {
+					document.getElementById("publishPoint").className = 'publish-point';
+				} else {
+					document.getElementById("publishPoint").className = 'publish-point fixed';
+				}
+			}
+			if(document.getElementById("addAllCommunityBtn") != null) { //添加圈子按钮
+//				console.log('body='+bodyHeight+'scroll='+scrollTop+'wh='+wh+'result='+(bodyHeight - scrollTop - wh));
+				if(bodyHeight - scrollTop - wh <= 158) {
+					document.getElementById("addAllCommunityBtn").className = 'accomplish';
+				} else {
+					document.getElementById("addAllCommunityBtn").className = 'accomplish fixed';
+				}
+			}
+		}
+		if(snslisttype == 0 || snslisttype == 5 || snslisttype == 6) {
+			var dch = getClientHeight();
+			scrollTop = getScrollTop();
+			scrollBottom = document.body.scrollHeight - scrollTop;
+			if(document.body.scrollHeight >= dch * 1.01 + 10) {
+				if(scrollBottom >= dch && scrollBottom <= (dch + 30)) {
+					if(snslisttype == 0) {
+						loadSnsMore();
+					} else {
+						allowScroll && getCommentList();
+					}
+				}
+			}
+		}
+		//		OdStatistics('1.5', false, 1, '测试页','pc_homepage','pc_demopage');
+		//		OdStatisticsReadRecycle();
+	}
+}
+//键盘事件
+function onKeyEvents() {
+	document.onkeydown = function(event) {
+		var e = event || window.event || arguments.callee.caller.arguments[0];
+		if(e && e.keyCode == 13) { // enter 键
+			if(document.activeElement.id == 'searchText') {
+				searchkey('searchText');
+			}
+			if(document.activeElement.id == 'searchText1') {
+				searchkey('searchText1');
+			}
+			if(document.activeElement.id == 'communityText') {
+				searchCommunity();
+			}
+		}
+	};
+}
+//后退刷新
+function refreshed() {
+	var re = document.getElementById("refreshed");
+	if(re != null) {
+		if(re.value == "no") {
+			re.value = "yes";
+		} else {
+			re.value = "no";
+			location.reload();
+		}
+	}
+
+}
+//footer1
+function commonFooter() {
+	if(document.querySelector('.wrapper') != null) {
+		document.querySelector('.wrapper').style.minHeight = wh - 190 + 'px';
+		d_Footer1();
+	}
+}
+
+//获取个人信息
+function getUserInfo(type) { //1允许未登录观看 2不允许
+	Od.Ajax({
+		method: api.method,
+		url: api.user,
+		asyc: false,
+		success: function(res) {
+			if(type == 2) {
+				if(res.code == -24) {
+					window.location.href = '/login?isfrom=1';
+					return false;
+				}
+			}
+			if(res.code == -24) {
+				d_HeaderInfo('');
+				return false;
+			}
+			Od.Ajax({
+				method: api.method,
+				url: api.messageCount,
+				asyc: false,
+				success: function(res) {
+					msgData = res.body;
+				}
+			});
+			isLogin = true;
+			var user = res.body.user;
+			document.getElementById("userid").value = user.id;
+			document.getElementById("username").value = user.name;
+			d_HeaderInfo(user, 1);
+			if(document.getElementById("userCenterInfo") != null && snslisttype != 7) {
+				d_Usercenter.userInfo(user);
+			}
+		}
+	});
+}
+//右下侧按钮
+function rightSideBar() {
+	var rightDiv = creatClassDom('div', 'right-side-bar');
+	var appA = creatClassDom('a', 'btn btn-default right-app-bar', {
+		'href': '/html/app.html',
+		'target': '_blank'
+	});
+	appA.innerHTML = '<i class="lsjbg lsjbg-phone"></i>';
+	var topA = creatClassDom('a', 'btn btn-default right-top-bar hide', {
+		'href': 'javascript:;'
+	});
+	topA.innerHTML = '<i class="icon icon-top"></i>';
+	topA.onclick = function() {
+		setScrollTop(0);
+	}
+	rightDiv.appendChild(appA);
+	rightDiv.appendChild(topA);
+	document.getElementsByTagName('body')[0].appendChild(rightDiv);
+}
+//右侧占位
+function rightSetUp() {
+	var sns = document.getElementById("snslisttype");
+	var rightBox = document.getElementById("contRight");
+	if(rightBox != null) {
+		if(sns && (sns.value == 0 || sns.value == 5 || sns.value == 8 || sns.value == 9 || sns.value == 10 || sns.value == 11)) {
+			Od.Ajax({
+				method: 'get',
+				url: '/thread/hotList',
+				data: {
+					'pageNo': 1,
+					'pageSize': 5
+				},
+				asyc: true,
+				success: function(res) {
+					rightBox.appendChild(d_Aside.setUpList(res, 1));
+					dboh = document.querySelector('.wrapper').querySelector('.main').offsetHeight;
+					var cush = wh - 100 - 100 - 76 - 210;
+					if(cush >= 600) {
+						cush = 600;
+					}
+					Od.CustomScroll({
+						target: 'aside-hot-list',
+						height: cush,
+						width: 248,
+						barWidth: 3
+					});
+					d_Footer();
+				}
+			});
+		} else {
+			if(sns && sns.value == 7) {
+				commonFooter();
+			} else if(sns && sns.value == 6) {
+				var issmalltopic = document.getElementById("issmalltopic").value;
+				if(issmalltopic == 9) {
+					Od.Ajax({
+						method: 'get',
+						url: '/thread/hotList',
+						data: {
+							'pageNo': 1,
+							'pageSize': 5
+						},
+						asyc: true,
+						success: function(res) {
+							rightBox.appendChild(d_Aside.setUpList(res, 1))
+							Od.CustomScroll({
+								target: 'aside-hot-list',
+								height: wh - 448,
+								width: 248,
+								barWidth: 3
+							});
+							d_Footer();
+						}
+					});
+				} else {
+					commonFooter();
+				}
+			} else {
+				Od.Ajax({
+					method: api.method,
+					url: api.draftslist,
+					data: {
+						'pageNo': 1,
+						'pageSize': 4
+					},
+					asyc: true,
+					success: function(res) {
+						if(res.code == 1) {
+							rightBox.appendChild(d_Aside.setUpList(res.body.sns.list, 2));
+						}
+					}
+				});
+				Od.Ajax({
+					method: api.method,
+					url: api.collectlist,
+					data: {
+						'pageNo': 1,
+						'pageSize': 4
+					},
+					asyc: true,
+					success: function(res) {
+						if(res.code == 1) {
+							rightBox.appendChild(d_Aside.setUpList(res.body.sns.list, 3));
+						}
+						commonFooter();
+					}
+				});
+			}
+		}
+	}
+}
+//转发浮层
+function openForward(data, num) {
+	Od.Ajax({
+		method: api.method,
+		url: api.forward,
+		data: {
+			'snsId': data.id,
+			'resourceId': data.resourceid,
+			'resourceType': data.snstype,
+			'pageNo': 1,
+			'pageSize': 5
+		},
+		asyc: true,
+		success: function(res) {
+			var resdata = res.body.sns.list;
+			var oDiv = creatClassDom('div', 'forward-window-box');
+			//forward-content
+			var contDiv = creatClassDom('div', 'forward-content clearfix');
+			var contBoxDiv = creatClassDom('div', 'content-box omit fl', {
+				'data-toggle': '0'
+			});
+			var contBoxP = creatClassDom('p', '');
+			contBoxP.innerHTML = '<a href="#" class="user">' + data.user.name + '</a>:' + Od.TransText({
+				text: data.description,
+				data: data,
+				lookAtAllUrl: '/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype
+			});
+			var arrowDiv = creatClassDom('a', 'omit-btn fr', {
+				'href': 'javascript:;'
+			});
+			arrowDiv.innerHTML = '<i class="lsjbg lsjbg-arrow2-bottom"></i>';
+			arrowDiv.onclick = function() {
+				var flag = contBoxDiv.getAttribute('data-toggle'); //0关闭 1打开
+				contBoxDiv.className = 'content-box fl ' + (flag == 0 ? '' : 'omit');
+				arrowDiv.style.display = 'none';
+				//				contBoxDiv.setAttribute('data-toggle',1 - flag);
+			}
+			contDiv.appendChild(contBoxDiv).appendChild(contBoxP);
+			oDiv.appendChild(contDiv).appendChild(arrowDiv);
+			//forward-textarea
+			var textDiv = creatClassDom('div', 'forward-textarea', {
+				'id': 'forwardText'
+			});
+			oDiv.appendChild(textDiv);
+			//forward-count
+			var boxDiv = creatClassDom('div', 'forward-box');
+			var countDiv = creatClassDom('div', 'forward-count');
+			countDiv.innerHTML = '<span>当前已转发' + res.body.sns.count + '次</span><em></em>';
+			var listDiv = creatClassDom('div', 'forward-list', {
+				'id': 'forwardList'
+			});
+			//list-item
+			boxDiv.appendChild(countDiv);
+			boxDiv.appendChild(listDiv);
+			if(res.body.sns.count > 5) {
+				var moreDiv = creatClassDom('div', 'forward-more');
+				moreDiv.innerHTML = '<a href="/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype + '&from=forward">查看所有' + (Number(res.body.sns.count) - 5) + '条转发</a>';
+				boxDiv.appendChild(moreDiv);
+			}
+			oDiv.appendChild(boxDiv);
+			Od.Window({
+				w: 540,
+				title: '转发',
+				html: oDiv,
+				submitBtn: false,
+				submitBtnText: '',
+				cancelBtn: false,
+				cancelBtnText: '',
+				styleName: 'forward-window',
+				callBack: function() {}
+			});
+			d_Details.forwardList(listDiv, resdata);
+			if(isLogin) {
+				commonInput({
+					target: document.getElementById('forwardText'),
+					type: 'reshare',
+					id: data.id,
+					originalId: (data.snstype == 2 || data.snstype == 9 || data.snstype == 10 ? data.id : data.original.id),
+					description: ('//@' + data.user.name + ':' + data.description),
+					maxCharCount: 140,
+					postUrl: '/api/retweet',
+					defaultText: (data.snstype == 0 ? '转发文章' : ''),
+					hideAsycInput: (data.snstype == 9 || data.snstype == 10 ? true : false),
+					beforeFunc: function() {},
+					successFunc: function(res) {
+						var forBox = document.getElementById('forwardList');
+						var resarr = new Array();
+						resarr.push(res.body.sns);
+						d_Details.forwardList(forBox, resarr, 2);
+						closeFowardInput('forward-window');
+					},
+					failFunc: function() {}
+				});
+			}
+		}
+	});
+}
+
+//关闭评论框
+function closeCommonInput(id, type) { //1清理html  2修改class
+	var box = document.getElementById(id)
+	if(type == 2) {
+		box.className = 'infobox comment hide';
+		box.querySelector('.msg-box').innerHTML = '';
+		box.querySelector('.msg-textarea').innerHTML = '';
+	} else {
+		box.innerHTML = '';
+	}
+
+}
+//关闭转发框
+function closeFowardInput(name) {
+	var thisNode = document.querySelector('.' + name);
+	var maskNode = document.getElementById("OdWindowMask"); //OdWindowMask
+	thisNode.parentNode.removeChild(thisNode);
+	maskNode.parentNode.removeChild(maskNode);
+}
+//查询url字段
+function getQueryString(name) {
+	var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+	var r = window.location.search.substr(1).match(reg);
+	if(r != null) {
+		return decodeURI(r[2]);
+	}
+	return null;
+}
+//收藏
+function toggleFavorite(obj, type) { //2取消 1添加
+	if(!isLogin) {
+		window.location.href = '/login?isfrom=1';
+		return false;
+	}
+	var dataid = obj.getAttribute('resourceId');
+	var datatype = obj.getAttribute('resourceType');
+	if(type == 2) {
+		Od.Alert({
+			html: '确定取消收藏？',
+			cancelBtn: true,
+			target: '',
+			callBack: function() {
+				Od.Ajax({
+					method: api.method,
+					url: api.favorite,
+					data: {
+						'resourceId': dataid,
+						'resourceType': datatype,
+						'type': 0
+					},
+					asyc: true,
+					success: function(res) {
+						if(res.code == 1) {
+							var cancelDom = document.querySelector('.item[resourceid="' + dataid + '"]');
+							cancelDom.parentNode.removeChild(cancelDom);
+						}
+					}
+				});
+			}
+		});
+	} else {
+		var isfavorite = obj.getAttribute('isfavorite'); //1收藏 0取消收藏
+		if(isfavorite == 0) {
+			obj.className = 'counter favor like likeAn';
+			obj.setAttribute('isfavorite', '1');
+			if(datatype == 0) {
+				obj.innerHTML = '<i class="icon icon-star"></i><br/><span>已收藏</span>';
+			} else {
+				obj.innerHTML = '<i class="icon icon-star"></i> 已收藏';
+			}
+		} else {
+			obj.className = 'counter favor like';
+			obj.setAttribute('isfavorite', '0');
+			if(datatype == 0 || datatype == 0) {
+				obj.innerHTML = '<i class="icon icon-star"></i><br/><span>收藏</span>';
+			} else {
+				obj.innerHTML = '<i class="icon icon-star"></i> 收藏';
+			}
+		}
+		Od.Ajax({
+			method: api.method,
+			url: api.favorite,
+			data: {
+				'resourceId': dataid,
+				'resourceType': datatype,
+				'type': (1 - isfavorite)
+			},
+			asyc: true,
+			success: function(res) {
+				if(res.code == 1) {
+					//					if(data.isfavorite == 1) {
+					//						obj.innerHTML = '收藏';
+					//					} else {
+					//						obj.innerHTML = '已收藏';
+					//					}
+				}
+			}
+		});
+	}
+
+}
+//点赞
+function togglePraise(data, obj, snstype) { //0 长文章 1小话题 2微文 3 转发 5 评论
+	if(!isLogin) {
+		window.location.href = '/login?isfrom=1';
+		return false;
+	}
+	var rel = obj.getAttribute('rel');
+	var spanObj = obj.getElementsByTagName('span')[0];
+	var type = 1; //1点赞 2取消赞
+	var num = isNaN(spanObj.innerHTML) ? 0 : Number(spanObj.innerHTML);
+	if(rel == 'like') {
+		obj.className = 'counter like likeAn';
+		obj.setAttribute('rel', 'unlike');
+		num++;
+	} else {
+		obj.className = 'counter like';
+		obj.setAttribute('rel', 'like');
+		type = 2;
+		num--;
+		if(num < 0) num = 0;
+	}
+	spanObj.innerHTML = num;
+	if(snstype == 4 || snstype == 5) {
+		var rid = data.id;
+	} else {
+		var rid = data.resourceid;
+	}
+	Od.Ajax({
+		method: api.method,
+		url: api.clickpraise,
+		data: {
+			'snsId': data.id,
+			'resourceId': rid,
+			'resourceType': snstype,
+			'type': type
+		},
+		asyc: true,
+		success: function(res) {}
+	});
+}
+//举报
+function showReport(type, userid, threadid) {
+	var html = '<div class="report-box"><div class="report-item">' +
+		'<h4>请选择举报原因：<span>必选</span></h4><div class="report-radio">' +
+		'<label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio1" value="人身攻击"> 人身攻击' +
+		'</label><label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio2" value="色情低俗"> 色情低俗' +
+		'</label><label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio3" value="广告骚扰"> 广告骚扰' +
+		'</label><label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio4" value="政治敏感"> 政治敏感' +
+		'</label><label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio5" value="谣言"> 谣言' +
+		'</label><label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio6" value="诈骗"> 诈骗' +
+		'</label><label class="radio-inline">' +
+		'<input type="radio" name="reportOptions" id="reportRadio7" value="其他"> 其他' +
+		'</label></div></div><div class="report-item">' +
+		'<h4>请输入补充说明：</h4><div class="report-text">' +
+		'<textarea name="" id="reportText" rows="2" cols="" placeholder="在此输入正文内容。"></textarea>' +
+		'</div></div></div>';
+	Od.Window({
+		title: '举报',
+		html: html,
+		submitBtn: true,
+		submitBtnText: '确认提交',
+		cancelBtn: false,
+		cancelBtnText: '取消',
+		styleName: 'report-window',
+		callBack: function() {
+			var radioVal = document.querySelector('[name="reportOptions"]:checked').value;
+			var reasonVal = document.getElementById("reportText").value;
+			console.log();
+			Od.Ajax({
+				method: api.method,
+				url: api.report,
+				asyc: false,
+				data: {
+					'te': type, //举报类型[1 帖子 2 评论 3 私信 4 用户 5 转发 6微文]
+					're': radioVal + ":" + reasonVal, //选项+说明
+					'uid': userid,
+					'tid': threadid,
+				},
+				success: function(res) {
+					if(res.status == 200) {
+						Od.Alert({
+							html: '您的举报信息已提交成功',
+							cancelBtn: false,
+							target: '',
+							callBack: function() {}
+						});
+					}
+				}
+			});
+		}
+	});
+
+}
+//数字计算
+function numberCalc(count) {
+	if(count >= 10000) {
+		return Math.floor(count / 1000) / 10 + '万';
+	} else {
+		return count;
+	}
+}
+//获取微文状态
+function getSnsState(currentId, currentType, type) { //type 1是修改  2删除 
+	var content = '';
+	Od.Ajax({
+		method: api.method,
+		url: api.snsstate,
+		data: {
+			'resourceId': currentId,
+			'resourceType': currentType
+		},
+		asyc: true,
+		success: function(res) {
+			var c = res.code;
+			if(c == 1) {
+				isEditorOrDel(currentId, currentType, type);
+				return false;
+			} else if(c == -51) {
+				deleteThread(currentId, currentType, -1);
+				return false;
+			} else if(c == -49) {
+				content = '文章转码中！';
+
+			} else {
+				content = '当前状态不可删除或修改！';
+			}
+			Od.Alert({
+				html: content,
+				cancelBtn: false,
+				target: '',
+				callBack: function() {}
+			});
+		}
+	});
+}
+//是否可以删除修改微文
+function isEditorOrDel(currentId, currentType, type) { //type 1是修改  2删除 
+	var content = '';
+	Od.Ajax({
+		method: api.method,
+		url: api.editordel,
+		data: {
+			'resourceId': currentId,
+			'resourceType': currentType
+		},
+		asyc: true,
+		success: function(res) {
+			var c = res.code;
+			if(c == 1) {
+				if(type == 1) {
+					window.location.href = '/thread/update?id=' + currentId;
+					document.getElementById("snsLoadNo").value = '1';
+				} else {
+					deleteThread(currentId, currentType);
+					return false;
+				}
+			} else if(c == -27 || c == -73 || c == 28 || c == -13 || c == -71 || c == -72 || c == -12) {
+				showApplyShow(currentId, currentType);
+				return false;
+			} else {
+				if(type == 1) {
+					content = '修改失败！';
+					if(c == -28) {
+						content = '修改已申请！';
+					}
+				} else {
+					content = '删除失败！';
+					if(c == -28) {
+						content = '删除已申请！';
+					}
+				}
+				Od.Alert({
+					html: content,
+					cancelBtn: false,
+					target: '',
+					callBack: function() {}
+				});
+			}
+		}
+	});
+}
+//删除微文/草稿方法
+function deleteThread(currentId, currentType, status) { //status-1为草稿
+	var content = '';
+	var reqData = {
+		'resourceId': currentId,
+		'resourceType': currentType
+	}
+	if(status == -1) {
+		reqData.status = status;
+	}
+	Od.Ajax({
+		method: api.method,
+		url: api.snsdel,
+		data: reqData,
+		asyc: true,
+		success: function(res) {
+			var c = res.code;
+			if(c == 1) {
+				content = '删除成功！'; //移除掉
+			} else if(c == -46 || c == -11) {
+				showApplyShow(currentId, currentType);
+				return false;
+			} else {
+				content = '删除失败！';
+			}
+			Od.Alert({
+				html: content,
+				cancelBtn: false,
+				target: '',
+				callBack: function() {
+					if(c == 1) {
+						var cancelDom = document.querySelector('.item[resourceid="' + currentId + '"]');
+						cancelDom.parentNode.removeChild(cancelDom);
+					}
+				}
+			});
+		}
+	});
+}
+// 申请删除/修改微文
+function showApplyShow(currentId) {
+	var html = '<div class="apply-box">' +
+		'<p>该文章已被管理员设为精选推荐或焦点图，如需修改或删除请注明理由，我们会尽快给你答复。</p>' +
+		'<textarea class="apply-reason"></textarea></div>';
+	Od.Window({
+		w: 500,
+		title: '对文章操作失败',
+		html: html,
+		submitBtn: true,
+		submitBtnText: '提交申请',
+		cancelBtn: false,
+		cancelBtnText: '取消',
+		styleName: 'apply-window',
+		callBack: function() {
+			var dialogText = document.querySelector('.apply-reason').value;
+			showApplySutmit(currentId, dialogText);
+		}
+	});
+}
+// 申请提交
+function showApplySutmit(currentId, dialogText) {
+	var content = '';
+	Od.Ajax({
+		method: 'get',
+		url: '/user/thread/' + currentId + '/apply-edit?info=' + dialogText,
+		asyc: true,
+		success: function(res) {
+			var c = res.code;
+			if(c == undefined) {
+				content = '提交失败，请请确认您已登录并刷新页面重试！';
+			} else {
+				if(c == 1002) {
+					content = '您好，您尚未登录或账号处于禁言状态，无法进行此操作。';
+				} else {
+					if(c == 1) {
+						content = '提交申请成功！';
+					} else if(c == -1 || c == 2) {
+						content = '您已提交过申请，请耐心等待！';
+					} else {
+						content = '提交失败，请确认您已登录并刷新页面重试！';
+					}
+				}
+			}
+			Od.Alert({
+				html: content,
+				cancelBtn: false,
+				target: '',
+				callBack: function() {
+					//					var applyDom = document.querySelector('.apply-box');
+					//					applyDom.parentNode.removeChild(applyDom);
+				}
+			});
+		}
+	});
+}
+//获取cookie
+function getCookie(name) {
+	var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+	if(arr = document.cookie.match(reg)) {
+		return unescape(arr[2]);
+	} else {
+		return null;
+	}
+}
+//设置cookie
+function setCookie(name, value) {
+	var Days = 30;
+	var exp = new Date();
+	exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+	document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString();
+}
+//时间
+function getTimeShow(time) { //计算时间间隔，单位为分钟
+	var inter = parseInt(time / 60);
+	if(inter == 0) {
+		return "刚刚";
+	} else if(inter < 60) { //多少分钟前
+		return inter.toString() + "分钟前";
+	} else if(inter < 60 * 24) { //多少小时前
+		return parseInt(inter / 60).toString() + "小时前";
+	} else if(inter < 60 * 24 * 366) { //多少天前
+		return parseInt(inter / 60 / 24).toString() + "天前";
+	} else {
+		return '很久以前';
+	}
+}
+// 判断设备类型
+var browser = {
+	versions: function() {
+		var u = navigator.userAgent;
+		return { //移动终端浏览器版本信息   
+			trident: u.indexOf('Trident') > -1, //IE内核  
+			presto: u.indexOf('Presto') > -1, //opera内核  
+			webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核  
+			gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核  
+			android: u.indexOf('Android') > -1, //|| u.indexOf('Linux') > -1, //android终端或者uc浏览器  
+			iPhone: u.indexOf('iPhone') > -1, //是否为iPhone或者QQHD浏览器  
+			iPad: u.indexOf('iPad') > -1, //是否iPad    
+			webApp: u.indexOf('Safari') == -1, //是否web应该程序，没有头部与底部  
+			ie10: u.indexOf('MSIE') > -1,
+			ie11: u.indexOf('rv:11') > -1
+		};
+	}(),
+	language: (navigator.browserLanguage || navigator.language).toLowerCase()
+}
+//trim
+function trim(str) {
+	var newStr = str.replace(/^\s*$/g, '')
+	return newStr;
+}
+//搜索关键字
+function searchkey(obj) {
+	var regs = new RegExp("\\(", "g");
+	var regs1 = new RegExp("\\)", "g");
+	var key001 = trim(document.getElementById(obj).value);
+	key001 = key001.replace(regs, "（");
+	key001 = key001.replace(regs1, "）");
+	//将搜索记录写入cookie；
+	var originalCookie = document.cookie;
+	var reg = /(keywords\()(.*)(\))/g;
+	var newKeyWords = key001;
+	newKeyWords = encodeURI(newKeyWords); //对中文关键字编码
+	var keyWords = originalCookie.match(reg);
+	if(keyWords == null || keyWords == "") {
+		keyWords = newKeyWords;
+	} else {
+		keyWords = keyWords.toString();
+		keyWords = keyWords.replace("keywords(", "");
+		keyWords = keyWords.replace(")", "");
+		keyWords = keyWords.split(',');
+		for(var i = 0; i < keyWords.length; i++) {
+			if(keyWords[i] == encodeURI(key001)) {
+				keyWords.splice(i, 1);
+			}
+		}
+		keyWords = keyWords.toString();
+		keyWords = keyWords + "," + newKeyWords;
+	}
+	var expdate = new Date(); //初始化时间
+	expdate.setTime(expdate.getTime() + 1000 * 60 * 60 * 24 * 7); //时间
+	document.cookie = "keywords(" + keyWords + ");expires=" + expdate.toGMTString() + ";path=/";
+	//跳转到搜索页
+	if(!(trim(key001).length != 0 && key001 != "搜索帖子、用户")) {
+		key001 = $("#keyword002").val();
+	}
+	if(trim(key001).length != 0 && key001 != "搜索帖子、用户") {
+		window.location.href = '/new_web/html/search.html?keyword=' + newKeyWords;
+	}
+}
+//读取cookie中的搜索历史纪录
+function searchHistory() {
+	var originalCookie = document.cookie;
+	var reg = /(keywords\()(.*)(\))/g;
+	var keyWords = originalCookie.match(reg);
+	if(keyWords != null) {
+		keyWords = keyWords.toString();
+		keyWords = keyWords.replace("keywords(", "");
+		keyWords = keyWords.replace(")", "");
+		keyWords = keyWords.split(",");
+		if(keyWords.length > 0) {
+			var j = 0;
+			if(keyWords.length > 10) {
+				j = keyWords.length - 10;
+			}
+			for(var i = j; i < keyWords.length; i++) {
+				if(keyWords[i] != "") {
+					$(".search-record").find('ul').prepend('<li><a href="javascript:;"><i></i><em>' + decodeURI(keyWords[i]) + '</em></a></li>');
+				}
+			}
+		}
+	}
+}
+//获取个人签名
+function getSignature(data) {
+	var sig = '';
+	if(data.isauthenticated == 1) {
+		sig = data.authenticated["1"];
+	} else {
+		sig = (data.signature == '' ? '这家伙很懒，什么都没有留下' : data.signature);
+	}
+	return sig;
+}
+//获取内容个数
+function getSnsCount(data) {
+	var count = 0;
+	if(data.snscount == undefined) {
+		count = Number(data.threadcount)
+	} else {
+		//		count = Number(data.threadcount) + Number(data.snscount);
+		count = Number(data.snscount);
+	}
+	return count;
+}
+//添加关注、取消关注
+function commonFollow(obj, id, status, type) {
+	if(!isLogin) {
+		window.location.href = '/login?isfrom=1';
+		return false;
+	}
+	var ftype = 1;
+	if(status != 0) {
+		ftype = 0;
+		Od.Alert({
+			html: '确定不再关注Ta？', //弹出框html
+			cancelBtn: true, //是否显示取消按钮，默认false，可不加。
+			target: '', //触发此事件按钮
+			callBack: function() { //点击确定的回调，可不加
+				Od.Ajax({
+					method: api.method,
+					url: api.followUser,
+					data: {
+						'userId': id,
+						'type': ftype
+					},
+					asyc: true,
+					success: function(res) {
+						if(res.code == 1) {
+							obj.innerHTML = commonFollowText(res.body.isfollow, type);
+							if(type == 2) {
+								obj.parentNode.setAttribute('isfollow', res.body.isfollow);
+							} else {
+								obj.setAttribute('isfollow', res.body.isfollow);
+							}
+
+						}
+					}
+				});
+			}
+		});
+	} else {
+		Od.Ajax({
+			method: api.method,
+			url: api.followUser,
+			data: {
+				'userId': id,
+				'type': ftype
+			},
+			asyc: true,
+			success: function(res) {
+				if(res.code == 1) {
+					obj.innerHTML = commonFollowText(res.body.isfollow);
+					if(type == 2) {
+						obj.parentNode.setAttribute('isfollow', res.body.isfollow);
+					} else {
+						obj.setAttribute('isfollow', res.body.isfollow);
+					}
+				}
+			}
+		});
+	}
+}
+//关注文案
+function commonFollowText(isfollow, type) { //type:2 只要文字 
+	var html = '';
+	if(isfollow == 0) {
+		html = (type == 2 ? '' : '<i class="icon icon-add"></i> ') + '未关注';
+	} else if(isfollow == 1) {
+		html = (type == 2 ? '' : '<i class="icon icon-tick"></i> ') + '已关注';
+	} else {
+		html = (type == 2 ? '' : '<i class="icon icon-mutual"></i> ') + '已关注';
+	}
+	return html;
+}
+//获取窗口可视范围的高度
+function getClientHeight() {
+	var clientHeight = 0;
+	if(document.body.clientHeight && document.documentElement.clientHeight) {
+		clientHeight = (document.body.clientHeight < document.documentElement.clientHeight) ? document.body.clientHeight : document.documentElement.clientHeight;
+	} else {
+		clientHeight = (document.body.clientHeight > document.documentElement.clientHeight) ? document.body.clientHeight : document.documentElement.clientHeight;
+	}
+	return clientHeight;
+}
+//获取滚动条高度
+function getScrollTop() {
+	var scrollTop = 0;
+	scrollTop = (document.body.scrollTop > document.documentElement.scrollTop) ? document.body.scrollTop : document.documentElement.scrollTop;
+	return scrollTop;
+}
+//设置滚动条高度
+function setScrollTop(num) {
+	(document.documentElement && document.documentElement.scrollTop) ? (document.documentElement.scrollTop = num) : (document.body.scrollTop = num);
+	//		document.documentElement.scrollTop = num;
+	//	} else if(document.body) {
+	//		document.body.scrollTop = num;
+	//	}
+}
+
+//列表去重
+function listUnique(data) {
+	var unique = true;
+	var l = uniqueArr.length;
+	if(inArray(data.id, uniqueArr) == -1) {
+		uniqueArr.push(data.id);
+		return true;
+	} else {
+		return false;
+
+	}
+}
+//数组验证
+function inArray(elem, array, i) {
+	var len;
+	if(array) {
+		if(indexOf) {
+			return indexOf.call(array, elem, i);
+		}
+		len = array.length;
+		i = i ? i < 0 ? Math.max(0, len + i) : i : 0;
+		for(; i < len; i++) {
+			if(i in array && array[i] === elem) {
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+//发布
+function testMicroTextInput() {
+	if(isLogin) {
+		microTextInput();
+	} else {
+		window.location.href = '/login?isfrom=1';
+	}
+}
+//改写url
+function rewriteUrl(typeKey, typeVal) {
+	var DEFAULT_VERSION = 8;
+	var ua = navigator.userAgent.toLowerCase();
+	var isIE = ua.indexOf("msie") > -1;
+	var safariVersion;
+	if(isIE) {
+		safariVersion = ua.match(/msie ([\d.]+)/)[1];
+		var sa = parseInt(safariVersion);
+		if(safariVersion <= DEFAULT_VERSION) {
+			return false;
+		}
+	}
+	var oldUrl = window.location.href;
+	//	var typeRe = /type=(\w*)/g;
+	var typeRe = new RegExp(typeKey + '=[-|\\w]\\w*', 'g');
+	if(typeRe.test(oldUrl)) {
+		window.history.pushState({}, 0, oldUrl.replace(typeRe, typeKey + '=' + typeVal));
+	} else {
+		var urlSearch = window.location.search;
+		if(urlSearch == '') {
+			window.history.pushState({}, 0, oldUrl + '?' + typeKey + '=' + typeVal);
+		} else {
+			window.history.pushState({}, 0, oldUrl + '&' + typeKey + '=' + typeVal);
+		}
+	}
+}
+
+function commonSlide(obj, type, total, w, l, num, fn1, fn2) { //obj按钮 type左右滑动 total总共的块数  w一个块的宽度  l一个slide的块数 num滑动页数
+	if(type == 1) { //右滑动
+		if(num >= (Math.ceil(total / l) - 1)) {
+			if(fn1) fn1();
+			return false
+		};
+		num++;
+	} else {
+		if(num == 0) {
+			if(fn2) fn2();
+			return false;
+		};
+		num--;
+	}
+	obj.style.transform = 'translateX(-' + (w * l * num) + 'px)';
+	obj.setAttribute('num', num);
+	if(num >= (Math.ceil(total / l) - 1) && fn1) {
+		fn1();
+	}
+	if(num == 0 && fn2) {
+		fn2();
+	}
+}
+function DomFixed() {
+	var scrollTop;
+	if(window.pageYOffset) {
+		scrollTop = window.pageYOffset;
+	} else {
+		scrollTop = document.documentElement.scrollTop;
+	}
+	if(scrollTop > 40) {
+		document.querySelector('.header').className = 'header fixed';
+		document.querySelector('.main').style.paddingTop = '40px';
+//		if(document.querySelector('.car-nav')) document.querySelector('.car-nav').className = "car-nav fixed";
+//		if(document.querySelector('.nav')) document.querySelector('.nav').style.top = '112px';
+//		if(document.querySelector('.cars-by-factory')) {
+//			var configBox = document.querySelector('.cars-by-factory');
+//			var top = configBox.offsetTop;
+//			var h = configBox.offsetHeight;
+//			if(scrollTop + 102 >= top) {
+//				configBox.className = 'cars-by-factory fixed';
+//				document.querySelector('.car-nav').className = document.querySelector('.car-nav').className + ' gray';
+//				document.querySelector('.nav').style.top = '150px';
+//			} else {
+//				configBox.className = 'cars-by-factory';
+//				document.querySelector('.car-nav').className = document.querySelector('.car-nav').className.replace('gray', '');
+//				document.querySelector('.nav').style.top = '112px';
+//			}
+//		}
+	} else {
+//		if(document.querySelector('.car-nav')) document.querySelector('.car-nav').className = "car-nav";
+//		if(document.querySelector('.nav')) document.querySelector('.nav').style.top = '50px';
+		document.querySelector('.header').className = 'header';
+		document.querySelector('.main').style.paddingTop = '0px';
+//		if(document.querySelector('.nav')) document.querySelector('.nav').style.top = '101px';
+	}
+};

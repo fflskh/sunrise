@@ -1,0 +1,565 @@
+var commonInput = function(res) {
+	var pubFlag = true;
+	var autoShareText = '';
+	var input = document.createElement('textarea');
+	input.setAttribute('placeholder', '此时此刻我想说');
+	if(res.isHighInput!=undefined&&res.isHighInput){
+		input.style.minHeight = '68px';
+	}
+	var countDom = document.createElement('span');
+	// if (!document.getElementById('commonInput-reshare-' + res.id + '-' + res.originalId)) {
+	var commonInputContainer = document.createElement('div');
+	var idPostFix = '';
+	if (res.type == 'reshare') {
+		if (!res.originalId || res.originalId == '') {
+			res.originalId = res.id;
+		}
+		commonInputContainer.setAttribute('data-id', res.id);
+		commonInputContainer.setAttribute('data-originalid', res.originalId);
+		idPostFix = res.id + '-' + res.originalId;
+		commonInputContainer.id = "commonInput-reshare-" + idPostFix;
+	}
+	if (res.type == 'comment' || res.type == 'reply') {
+		if (!res.commentId || res.commentId == '') {
+			res.commentId = '';
+			idPostFix = res.resourceId
+		} else {
+			idPostFix = res.resourceId + '-' + res.commentId;
+		}
+		commonInputContainer.setAttribute('data-resourceid', res.resourceId);
+		commonInputContainer.setAttribute('data-commentid', res.commentId);
+		commonInputContainer.setAttribute('data-resourcetype', res.resourceType);
+		commonInputContainer.id = "commonInput-comment-" + idPostFix;
+	}
+	if (res.type == 'conversition') {
+		idPostFix = res.userId;
+		commonInputContainer.setAttribute('data-userid', idPostFix);
+		commonInputContainer.id = "commonInput-conversition-" + idPostFix;
+	}
+	commonInputContainer.className = 'common-input';
+	//textarea
+	var inputC = document.createElement('div');
+	inputC.className = 'common-input-area';
+	input.id = 'common-textarea-' + idPostFix;
+	inputC.appendChild(input);
+	//上传图片按钮
+	var upImgBtn = document.createElement('a');
+	upImgBtn.setAttribute('href', 'javascript:;');
+	upImgBtn.className = 'commonInput-upImgBtn';
+	upImgBtn.innerHTML = '<i></i>图片';
+	upImgBtn.id = 'commonInput-upImgBtn-' + idPostFix;
+	var upImgBtnC = document.createElement('span');
+	upImgBtnC.style.display = 'inline-block';
+	upImgBtnC.style.position = 'relative';
+	upImgBtnC.appendChild(upImgBtn);
+	//插入表情按钮
+	var faceBtn = document.createElement('a');
+	faceBtn.setAttribute('href', 'javascript:;');
+	faceBtn.className = 'commonInput-faceBtn';
+	faceBtn.id = 'commonInput-faceBtn-' + idPostFix;
+	faceBtn.innerHTML = '<i></i>表情';
+	//同时转发/评论
+	if (res.type == 'comment' || res.type == 'reshare') {
+		var check = document.createElement('label');
+		check.setAttribute('for', 'sync-' + idPostFix);
+		check.style.display = 'inline-block';
+		check.style.color = '#999';
+		var checkBox = document.createElement('input');
+		checkBox.type = 'checkbox';
+		checkBox.style.verticalAlign = 'middle';
+		checkBox.style.marginRight = '5px';
+		checkBox.style.width = '18px';
+		checkBox.style.height = '18px';
+		checkBox.id = 'sync-' + idPostFix;
+		var checkText = document.createElement('em');
+		if (res.type == 'comment') {
+			checkText.innerText = '同时转发';
+		} else {
+			checkText.innerText = '同时评论';
+		}
+		check.appendChild(checkBox);
+		check.appendChild(checkText);
+	}
+	Od.PopLayer({
+		arrow: true,
+		id: faceBtn.id,
+		target: faceBtn,
+		zIndex: 1002,
+		method: 'click',
+		html: function(popContent) {
+			var faceContainer = document.createElement('div');
+			faceContainer.className = 'custom-face-container';
+			for (var i = 1, len = 60; i <= len; i++) {
+				if (i < 10) {
+					i = '0' + i;
+				}
+				var a = document.createElement('a');
+				a.href = 'javascript:;';
+				a.setAttribute('faceStr', '[5X:01' + i + ']'); //加载表情编码
+				a.onclick = function() {
+					Od.InsertFace(this, input); //插入表情转义
+				}
+				a.innerHTML = Od.TransText({
+					text: '[5X:01' + i + ']'
+				}); //编码转表情图
+				faceContainer.appendChild(a);
+			}
+			popContent.appendChild(faceContainer);
+		}
+	});
+	var textareaMaxHeight = res.textareaMaxHeight || 200,
+		textareaMinHeight = res.textareaMinHeight || 98;
+	input.onfocus = function(e) { //焦点进入加载自定义textarea
+		e = e || event || window.event;
+		var that = this;
+		Od.Textarea({
+			id: input.id, //textarea id
+			listZindex: 1002,
+			// width: 100 % ,
+			maxHeight: res.textareaMaxHeight, //最大高度，超过此高度显示滚动条
+			minHeight: res.textareaMinHeight, //最小高度，默认高度
+			maxCharCount: 140,
+			fontSize: 14, //字体大小
+			lineHeight: 18, //行高
+			userId: 1, //登录用户id
+			atUrl: '/api/user/follow', //关注人列表接口
+			topicUrl: '/api/getTopicList', //话题列表接口
+			countTarget: countDom, //显示计数元素
+			pubFunc: function() {
+				pubCommon(that, idPostFix);
+			}
+		});
+
+	};
+	//计数
+	countDom.className = 'common-input-count';
+	countDom.id = 'commonTextInputCount-' + idPostFix;
+	//发布按钮
+	var pubCommonBtn = document.createElement('a');
+	pubCommonBtn.setAttribute('href', 'javascript:;');
+	pubCommonBtn.className = 'pubCommonBtn';
+	pubCommonBtn.innerHTML = '发布';
+	pubCommonBtn.onclick = function() {
+		if (pubFlag) {
+			pubCommon(this, idPostFix);
+		}
+	};
+	//按钮区域
+	var btnArea = document.createElement('div');
+	btnArea.className = 'commonInput-btnArea';
+	// btnArea.style.position = 'relative';
+	btnArea.appendChild(faceBtn);
+	btnArea.appendChild(upImgBtnC);
+	if (res.type == 'comment' || res.type == 'reshare') {
+		if (!res.hideAsycInput) {
+			btnArea.appendChild(check);
+		}
+	}
+	btnArea.appendChild(pubCommonBtn);
+	btnArea.appendChild(countDom);
+	commonInputContainer.appendChild(inputC);
+	commonInputContainer.appendChild(btnArea);
+
+	function imgAdd(up, files) {
+		Od.PopLayer({
+			id: upImgBtn.id,
+			arrow: true,
+			zIndex: 1002,
+			target: upImgBtn,
+			method: 'handleClose-auto', //属性和值固定，添加此项则必须使用关闭按钮方可关闭浮层，关闭按钮自动生成，无需定义
+			handleCloseText: '是否取消上传图片？',
+			html: function(popContent) {
+				var html = document.createElement('div');
+				html.style.width = '120px';
+				html.style.height = '120px';
+				html.style.marginTop = '5px';
+				html.style.backgroundColor = '#eee';
+				html.style.textAlign = 'center';
+				html.id = files[0].id
+				html.innerHTML = '<img src="/images/loading.gif" style="width:18px;height:18px;margin-top:51px;"/>';
+				popContent.appendChild(html);
+			},
+			closeCallBack: function() { //关闭回调
+				up.disableBrowse(false);
+			}
+		});
+		up.disableBrowse(true);
+	};
+
+	function imgLoaded(up, file, info) {
+		info = eval('(' + info.response + ')');
+		document.getElementById(file.id).innerHTML = '';
+		document.getElementById(file.id).appendChild(Od.ImageUrl({
+			type: 1,
+			w: 120,
+			h: 120,
+			gravity: 'Center',
+			hash: info.hash
+		}));
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('fsize', info.fsize);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('mime', info.mimeType);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('w', info.w);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('h', info.h);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('hash', info.hash);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('url', info.hash);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('type', 2);
+		document.getElementById(file.id).parentNode.parentNode.setAttribute('sort', 0);
+	};
+	if (res.type == 'comment' && document.getElementById('commonInput-comment-' + idPostFix)) {
+		res.target.removeChild(document.getElementById('commonInput-comment-' + idPostFix))
+	}
+	if (res.target.querySelector('.common-input')) {
+		res.target.removeChild(res.target.querySelector('.common-input'));
+	}
+	res.target.appendChild(commonInputContainer);
+	var imageUpload = Od.imageUpload({
+		uploader: this,
+		id: upImgBtn.id,
+		singleSelect: true,
+		fileAdd: function(up, files) {
+			imgAdd(up, files);
+		},
+		fileLoaded: function(up, file, info) {
+			imgLoaded(up, file, info);
+		}
+	});
+	if (document.getElementById('threadid') && document.getElementById('threadid').value == idPostFix) {
+
+	} else {
+		Od.SetCaretPosition(input, 0);
+	}
+	if (res.type == 'reshare' && res.originalId && res.originalId != '' && res.originalId != null && res.originalId != res.id) {
+		document.getElementById('commonInput-reshare-' + res.id + '-' + res.originalId).setAttribute('data-id', res.id);
+		document.getElementById('commonInput-reshare-' + res.id + '-' + res.originalId).setAttribute('data-originalid', res.originalId);
+		var des = '';
+		var userName = '';
+		var thisTextarea = document.getElementById('commonInput-reshare-' + res.id + '-' + res.originalId).getElementsByTagName('textarea')[0];
+
+		if (res.description) {
+			// if (typeof(res.description) == 'object') {
+			// 	for (var i = 0, len = res.description.length; i < len; i++) {
+			// 		if (res.description[i].id == res.id) {
+			// 			des = res.description[i].description;
+			// 			userName = res.description[i].user.name;
+			// 			break;
+			// 		}
+			// 	}
+			// 	thisTextarea.value = '//@' + userName + ':' + des;
+			// } else {
+			thisTextarea.value = res.description;
+			// }
+		}
+		// thisTextarea.focus();
+		// thisTextarea.onfocus = function(e) { //焦点进入加载自定义textarea
+		// 	e = e || event || window.event;
+		// };
+		Od.SetCaretPosition(thisTextarea, 0);
+		// function change(dom) {
+		// 	if (dom.value.indexOf('@' + userName) < 0) {
+		// 		document.getElementById('commonInput-reshare-' + res.id + '-' + res.originalId).setAttribute('data-id', res.originalId);
+		// 	}
+		// };
+		// thisTextarea.onkeyup = function(e) {
+		// 	change(this);
+		// };
+		// thisTextarea.onclick = function(e) {
+		// 	change(this);
+		// };
+		// // thisTextarea.onfocus = function(e) {
+		// // 	change(this);
+		// // };
+		// thisTextarea.onpaste = function() {
+		// 	change(this);
+		// };
+	}
+
+	function pubCommon(dom, idPostFix) {
+		pubFlag = false;
+		var parent = dom.parentNode.parentNode;
+		var id = parent.getAttribute('data-id');
+		var resourceId = parent.getAttribute('data-resourceid');
+		var commentId = parent.getAttribute('data-commentid');
+		if (commentId == null) {
+			var commentId = '';
+		}
+		var isSyn = 0;
+		if (document.getElementById('sync-' + idPostFix) && document.getElementById('sync-' + idPostFix).checked) {
+			isSyn = 1;
+		}
+		var content = parent.getElementsByTagName('textarea')[0].value;
+		var atJson = '';
+		var atJsonCookie = '';
+		//@列表
+		var atReg = /(\@[^@]*?)([^\:]\s|\:|\：|$)/g;
+		var atList = content.match(atReg);
+		if (atList) {
+			var atTempList = [];
+			for (var i = 0, len = atList.length; i < len; i++) {
+				atList[i] = atList[i].replace('@', '');
+				atList[i] = atList[i].replace(/\s/g, '');
+				atList[i] = atList[i].replace(/\:/g, '');
+				atList[i] = atList[i].replace(/\：/g, '');
+				if (atTempList.indexOf(atList[i]) < 0) {
+					if (atList[i] != '') {
+						if (atTempList.length <= 0) {
+							atJson = atList[i];
+							atJsonCookie = encodeURIComponent(atList[i]);
+						} else {
+							atJson = atJson + ',' + atList[i];
+							atJsonCookie = atJsonCookie + ',' + encodeURIComponent(atList[i]);
+						}
+
+					}
+					atTempList.push(atList[i]);
+				}
+			}
+		}
+		var topicJson = '';
+		var topicJsonCookie = '';
+		var topicReg = /(#)([\u4e00-\u9fa5,A-Za-z0-9]*)(#)/g;
+		var topicList = content.match(topicReg);
+		if (topicList) {
+			var topicTempList = [];
+			for (var j = 0, len = topicList.length; j < len; j++) {
+				topicList[j] = topicList[j].replace(topicReg, '$2');
+				topicList[j] = encodeURIComponent(topicList[j]);
+				if (topicTempList.indexOf(topicList[j]) < 0) {
+					if (topicList[j] != '') {
+						if (topicTempList.length <= 0) {
+							topicJson = topicList[j];
+							topicJsonCookie = encodeURIComponent(topicList[j]);
+						} else {
+							topicJson = topicJson + ',' + topicList[j];
+							topicJsonCookie = topicJsonCookie + ',' + encodeURIComponent(topicList[j]);
+						}
+						topicTempList.push(topicList[j]);
+					}
+				}
+			}
+		}
+		content = content.replace(/(^\s*)|(\s*$)/g, "");
+		content = Od.TransTextToCode(content);
+		content = encodeURIComponent(content);
+		var imageJson1 = new Object;
+		var imageJson = [];
+		var imageHash = '';
+		if (document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix)) {
+			var thisImg = document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix);
+			if (thisImg.getAttribute('hash')) {
+				imageJson1 = {
+					size: thisImg.getAttribute('fsize'),
+					mime: thisImg.getAttribute('mime'),
+					width: thisImg.getAttribute('w'),
+					description: '',
+					sort: 0,
+					type: 2,
+					hash: thisImg.getAttribute('hash'),
+					url: thisImg.getAttribute('url'),
+					height: thisImg.getAttribute('h')
+				};
+				imageJson.push({
+					size: thisImg.getAttribute('fsize'),
+					mime: thisImg.getAttribute('mime'),
+					width: thisImg.getAttribute('w'),
+					description: '',
+					sort: 0,
+					type: 2,
+					hash: thisImg.getAttribute('hash'),
+					url: thisImg.getAttribute('url'),
+					height: thisImg.getAttribute('h')
+				});
+			}
+
+			imageHash = document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix).getAttribute('hash');
+		}
+
+		if (countDom.innerHTML.length > 0) {
+			Od.Alert({
+				html: '内容不得超过' + res.maxCharCount + '字',
+				callBack: function() {
+					pubFlag = true;
+				}
+			});
+		} else {
+			if (content.length <= 0 && imageJson.length <= 0 && res.type == 'comment') {
+				Od.Alert({
+					html: '您的发布的内容为空，请正确填写',
+					callBack: function() {
+						pubFlag = true;
+					}
+				});
+			} else {
+				if (imageJson.length > 0 && res.type == 'reshare') {
+					if (content.indexOf('%2F%2F') >= 0) {
+						var reshareContent = content.substring(content.indexOf('//'), content.length);
+						var newContent = content.substring(0, content.indexOf('//'));
+						content = newContent + ' [http://15feng.cn/p/' + document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix).getAttribute('hash') + ']' + reshareContent;
+					} else {
+						content = content + ' [http://15feng.cn/p/' + document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix).getAttribute('hash') + ']';
+					}
+				}
+				if (imageJson.length > 0 && res.type == 'reply') {
+					content = content + ' [http://15feng.cn/p/' + document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix).getAttribute('hash') + ']';
+				}
+				if (imageJson.length > 0 && res.type == 'comment') {
+					if (content == '') {
+						if (isSyn == 1) {
+							content = res.defaultText || '转发微文';
+						} else {
+							content = '图片评论';
+						}
+					}
+					content = content + ' [http://15feng.cn/p/' + document.getElementById('OdPopLayer-commonInput-upImgBtn-' + idPostFix).getAttribute('hash') + ']';
+				}
+				if (content.length <= 0 && imageJson.length <= 0 && res.type == 'reshare') {
+					content = res.defaultText || '转发微文';
+				}
+				var data = new Object();
+				if (res.type == 'comment' || res.type == 'reply') {
+					data = {
+						'issynforward': isSyn,
+						'resourceid': parent.getAttribute('data-resourceid'),
+						'resourcetype': parent.getAttribute('data-resourcetype'),
+						'parentid': parent.getAttribute('data-commentid'),
+						'image': JSON.stringify(imageJson1),
+						'atlist': JSON.stringify(atJson),
+						'content': content
+					}
+				} else if (res.type == 'reshare') {
+					data = {
+						'snsid': parent.getAttribute('data-id'),
+						'isdraft': 0,
+						'issyncomment': isSyn,
+						'originalsnsid': parent.getAttribute('data-originalid'),
+						'imagelist': JSON.stringify(imageJson),
+						'atlist': JSON.stringify(atJson),
+						'forwardcontent': content
+					}
+				} else if (res.type == 'conversition') {
+					var image = new Object;
+					if (imageJson.length > 0) {
+						image = imageJson[0];
+					}
+					data = {
+						'userId': parent.getAttribute('data-userid'),
+						'image': JSON.stringify(image),
+						'content': content
+					}
+				}
+				Od.Ajax({
+					method: 'post', //方法
+					url: res.postUrl, //接口地址
+					asyc: false, //是否为异步
+					data: data,
+					before: function() {
+						if (res.beforeFunc) {
+							res.beforeFunc();
+						}
+					},
+					success: function(data) { //请求成功
+						if (data.code == 1) {
+							if (atJsonCookie) {
+								var atlist = document.cookie;
+								atlist = atlist.match(/(atlist\=\[)(.*?)(\])/g);
+								var atExpdate = new Date(); //初始化时间
+								atExpdate.setTime(atExpdate.getTime() + 1000 * 60 * 60 * 24 * 365); //一年有效
+								if (atlist) {
+									atlist = atlist[0].replace('atlist=[', '').replace(']', '');
+									atlist = atJsonCookie + ',' + atlist;
+								} else {
+									atlist = atJsonCookie;
+								}
+								document.cookie = 'atlist=[' + atlist + '];expires=' + atExpdate.toGMTString() + ';path=/';
+							}
+							if (topicJsonCookie) {
+								var topicExpdate = new Date(); //初始化时间
+								topicExpdate.setTime(topicExpdate.getTime() + 1000 * 60 * 60 * 24 * 182); //一年有效
+								var topiclist = document.cookie;
+								topiclist = topiclist.match(/(topiclist\=\[")(.*?)(\])/g);
+								if (topiclist) {
+									topiclist = topiclist[0].replace('topiclist=[', '').replace(']', '');
+									topiclist = topicJsonCookie + ',' + topiclist;
+								} else {
+									topiclist = topicJsonCookie;
+								}
+								document.cookie = 'topiclist=[' + topiclist + '];expires=' + topicExpdate.toGMTString() + ';path=/';
+							}
+							var successLayer = document.createElement('div');
+							successLayer.className = 'pub-success';
+							successLayer.style.width = parent.querySelector('.common-input-area').offsetWidth - 2 + 'px';
+							successLayer.style.height = parent.querySelector('.common-input-area').offsetHeight - 2 + 'px';
+							successLayer.style.lineHeight = parent.querySelector('.common-input-area').offsetHeight + 'px';
+							successLayer.style.top = Od.Top(parent.querySelector('.common-input-area')) + 2 + 'px';
+							successLayer.style.left = Od.Left(parent.querySelector('.common-input-area')) + 2 + 'px';
+							successLayer.innerHTML = '<i></i>发布成功'
+							successLayer.style.opacity = 0;
+							document.body.appendChild(successLayer);
+							setTimeout(function() {
+								successLayer.style.opacity = 1;
+							}, 20);
+							setTimeout(function() {
+								document.body.removeChild(successLayer);
+								document.getElementById(input.id).value = '';
+								if (document.getElementById('OdPopLayer-' + upImgBtn.id)) {
+									document.getElementById('OdPopLayer-' + upImgBtn.id).className = 'OdPopLayer';
+									setTimeout(function() {
+										if (document.getElementById('OdPopLayer-' + upImgBtn.id)) {
+											document.body.removeChild(document.getElementById('OdPopLayer-' + upImgBtn.id));
+											imageUpload.disableBrowse(false);
+										}
+									}, 200);
+
+								}
+								if (res.successFunc) {
+									res.successFunc(data);
+								}
+								if (document.getElementById('sync-' + idPostFix)) {
+									document.getElementById('sync-' + idPostFix).checked = false;
+								}
+								pubFlag = true;
+							}, 720);
+
+						} else {
+							if (res.failFunc) {
+								res.failFunc();
+								pubFlag = true;
+							} else {
+								Od.Alert({
+									html: '发送失败',
+									callBack: function() {
+										pubFlag = true;
+									}
+								});
+							}
+						}
+					},
+					error: function() { //请求接口失败
+						Od.Alert({
+							html: '请求接口失败',
+							callBack: function() {
+								pubFlag = true;
+							}
+						});
+					}
+				});
+			}
+		}
+	};
+	return input;
+};
+// var bodyHeight = document.body.offsetHeight;
+// var odPopLayerTimer = setInterval(function() {
+// 	if (document.querySelectorAll('.OdPopLayer').length > 0 && Math.abs(document.body.offsetHeight - bodyHeight) > 0) {
+// 		for (var k = 0, len = document.querySelectorAll('.OdPopLayer').length; k < len; k++) {
+// 			var generalId = document.querySelectorAll('.OdPopLayer')[k].id;
+// 			var generalId1 = generalId.replace('OdPopLayer-', '');
+// 			if (!document.getElementById(generalId1) && document.getElementById(generalId)) {
+// 				document.body.removeChild(document.getElementById(generalId))
+// 			}
+// 			if (document.getElementById(generalId)) {
+// 				document.getElementById(generalId).style.top = Od.Top(document.getElementById(generalId1)) + document.getElementById(generalId1).offsetHeight + 10 + 'px';
+// 			}
+// 		}
+// 	}
+// 	bodyHeight = document.body.offsetHeight;
+// }, 100);

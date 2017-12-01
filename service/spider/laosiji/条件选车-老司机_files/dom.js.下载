@@ -1,0 +1,2834 @@
+//制造dom
+function creatClassDom(type, className, attrObj) {
+	var dom = document.createElement(type);
+	dom.className = className;
+	if(attrObj != undefined) {
+		for(attr in attrObj) {
+			dom.setAttribute(attr, attrObj[attr])
+		}
+	}
+	return dom;
+}
+//header
+function d_HeaderInfo(data) {
+	var box = document.getElementById("hInfoBox");
+	box.innerHTML = '';
+	for(var i = 0; i < 3; i++) {
+		var oLi = creatClassDom('li', 'info-item');
+		var oLine = creatClassDom('span', 'line');
+		if(i == 0) {
+			if(isLogin) {
+				var userLogo = Od.ImageUrl({
+					isHeadPic: true,
+					returnHtml: true,
+					type: 1,
+					w: 35,
+					h: 35,
+					gravity: 'Center',
+					hash: data.image.url
+				});
+				var liHtml = '<div class="user">';
+				var num = msgData.fins;
+				if(num > 0) {
+					liHtml += '<em class="dot"></em>';
+				}
+				liHtml += '<a href="/new_web/html/usercenter.html" class="item">' + userLogo +
+					'</a><div class="menu us-menu"><span class="triangle"><em class="tri-depth"></em></span>' +
+					'<ul><li><a href="/new_web/html/usercenter.html">个人中心</a></li>' +
+					'<li><a href="/new_web/html/usercenter_fans.html?from=follow">我的关注</a></li>' +
+					'<li><a href="/new_web/html/usercenter_fans.html?from=fans">我的粉丝</a>' + (msgData.fins == 0 ? '' : '<em class="dot"></em>') + '</li>' +
+					//					'<li><a href="#">修改资料</a></li>' +
+					'<li><a href="/new_web/html/usercenter_draft.html">我的草稿</a></li>' +
+					'<li><a href="/new_web/html/usercenter_collect.html">我的收藏</a></li>' +
+					'<li><a href="/logout">退出登录</a></li>' +
+					'</ul></div></div>'
+			} else {
+				var liHtml = '<a href="/login?isfrom=1" class="login log-txt">登录</a>';
+			}
+			oLi.innerHTML = liHtml;
+			box.appendChild(oLi);
+			if(isLogin) box.appendChild(oLine);
+		} else if(i == 1) {
+			if(isLogin) {
+				var liHtml = '<div class="message">';
+				var num = msgData.comment + msgData.at + msgData.atcomment + msgData.atdiscuss + msgData.praise + msgData.received + msgData.system;
+				var atCount = msgData.at + msgData.atdiscuss + msgData.atcomment;
+				if(num > 0) {
+					liHtml += '<em class="dot"></em>';
+					var isIndex = document.getElementById("snslisttype");
+					if(isIndex && isIndex.value == 0) {
+						var rehtml = '';
+						var remindBox = creatClassDom('div', 'remind-box');
+						var closeA = creatClassDom('a', 'close', {
+							'href': 'javascript:;'
+						});
+						closeA.innerHTML = '<i class="icon icon-delete"></i>';
+						closeA.onclick = function() {
+							remindBox.parentNode.removeChild(remindBox);
+						}
+						if(atCount > 0) {
+							rehtml += '<div class="item">' + atCount + '条@我的内容，<a href="/new_web/html/usercenter_at.html">查看</a></div>';
+						}
+						if(msgData.comment > 0) {
+							rehtml += '<div class="item">' + msgData.comment + '条新评论，<a href="/new_web/html/usercenter_comment.html">查看</a></div>';
+						}
+						if(msgData.praise > 0) {
+							rehtml += '<div class="item">' + msgData.praise + '个赞，<a href="/new_web/html/usercenter_praise.html">查看</a></div>';
+						}
+						if(msgData.received > 0) {
+							rehtml += '<div class="item">' + msgData.received + '条私信，<a href="/new_web/html/usercenter_private.html">查看</a></div>';
+						}
+						if(msgData.system > 0) {
+							rehtml += '<div class="item">' + msgData.system + '条系统消息，<a href="/new_web/html/usercenter_message.html">查看</a></div>';
+						}
+						remindBox.innerHTML = rehtml;
+						remindBox.appendChild(closeA);
+						box.parentNode.appendChild(remindBox);
+					}
+				}
+
+				liHtml += '<a href="javascript:;" class="item"><i class="icon icon-message"></i></a>' +
+					'<div class="menu ms-menu"><span class="triangle"><em class="tri-depth"></em></span><ul>' +
+					'<li><a href="/new_web/html/usercenter_comment.html">评论' + (msgData.comment == 0 ? '' : ('<em class="dot-num">' + msgData.comment + '</em>')) + '</a></li>' +
+					'<li><a href="/new_web/html/usercenter_at.html">@我的' + (atCount == 0 ? '' : ('<em class="dot-num">' + atCount + '</em>')) + '</a></li>' +
+					'<li><a href="/new_web/html/usercenter_praise.html">赞' + (msgData.praise == 0 ? '' : ('<em class="dot-num">' + msgData.praise + '</em>')) + '</a></li>' +
+					'<li><a href="/new_web/html/usercenter_private.html">私信' + (msgData.received == 0 ? '' : ('<em class="dot-num">' + msgData.received + '</em>')) + '</a></li>' +
+					'<li><a href="/new_web/html/usercenter_message.html">系统消息' + (msgData.system == 0 ? '' : ('<em class="dot-num">' + msgData.system + '</em>')) + '</a></li>' +
+					'</ul></div></div>';
+				oLi.innerHTML = liHtml;
+				box.appendChild(oLi);
+			}
+			box.appendChild(oLine);
+		} else {
+			var oDiv = creatClassDom('div', 'search open');
+			oDiv.id = 'hSearch';
+			var oA = creatClassDom('a', 'item', {
+				'href': 'javascript:;'
+			});
+			oA.innerHTML = '<i class="icon icon-search"></i>';
+			oA.onclick = function(e) {
+				//				e.stopPropagation();
+				//				if(this.parentNode.className == 'search') {
+				//					this.parentNode.className = 'search open';
+				//					document.getElementById("searchText").focus();
+				//				} else {
+				//					this.parentNode.className = 'search';
+				//					//					skipSearch();
+				//				}
+			}
+
+			function skipSearch() {
+				var val = document.getElementById("searchText").value;
+				if(val != '') {
+					window.location.href = '/new_web/html/search.html?keyword=' + val;
+				}
+			}
+			//			document.getElementsByTagName('body')[0].onclick=function(){
+			//				document.getElementById("hSearch").className='search';
+			//			}
+			var inp = creatClassDom('input', 'search-input', {
+				'type': 'text',
+				'placeholder': '请输入关键词',
+				'id': 'searchText'
+			});
+			oDiv.appendChild(oA);
+			oDiv.appendChild(inp);
+			oLi.appendChild(oDiv);
+			box.appendChild(oLi);
+		}
+	}
+}
+//侧面footer
+function d_Footer() {
+	var footDiv = creatClassDom('div', 'aside-sns footer');
+	footDiv.innerHTML = '<div class="foot-logo clearfix"><div class="fl">' +
+		'<img src="/new_web/static/images/logo.png"/></div><div class="fr">' +
+		'<a href="http://weibo.com/xxxxxbbs" target="_blank"><i class="lsjbg lsjbg-weibo-l"></i></a>' +
+		'<a href="http://www.toutiao.com/search/?keyword=老司机App出品" target="_blank"><i class="lsjbg lsjbg-toutiao-l"></i></a>' +
+		'</div></div><div class="foot-text-high">© 2017 LAOSIJI 北京锋巢信息技术有限公司</div><div class="foot-text">京ICP备17005212号-1</div><div class="foot-text">' +
+		'<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802023733" class="beian">' +
+		'<img src="/new_web/static/images/beian.png" /></a> 京公网安备 11010802023733号</div>' +
+		'<div class="foot-slogan"><i class="lsjbg lsjbg-slogan2"></i></span>' +
+		'</div></div>';
+	document.getElementById('contRight').appendChild(footDiv);
+}
+//底部footer
+function d_Footer1() {
+	var footDiv = creatClassDom('div', 'footer1');
+	footDiv.innerHTML = '<div class="container clearfix"><div class="foot-left fl">' +
+		'<a href="http://www.laosiji.com" class="foot-logo"><img src="/new_web/static/images/logo.png"/></a>' +
+		'<span class="foot-left-text"><i class="lsjbg lsjbg-slogan2"></i></span>' +
+		'<a href="http://weibo.com/xxxxxbbs" target="_blank" class="foot-friend"><i class="lsjbg lsjbg-weibo-l"></i></a>' +
+		'<a href="http://www.toutiao.com/search/?keyword=老司机App出品" target="_blank"><i class="lsjbg lsjbg-toutiao-l"></i></a>' +
+		'</div><div class="foot-right fr">© 2017 LAOSIJI   京ICP备17005212号-1  ' +
+		'<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802023733">' +
+		'<img src="/new_web/static/images/beian.png" /></a>京公网安备 11010802023733号</div></div>';
+	document.querySelector('body').appendChild(footDiv);
+	//	document.querySelector('body').style.minHeight = '100%';
+}
+//leftnav
+function d_Nav(type) { //type 0推荐  1热门节目  2话题  3圈子  4个人中心
+	var box = document.getElementById("nav");
+	if(box==null)return false;
+	var navDiv = creatClassDom('div', 'nav2');
+	var scrollDiv = creatClassDom('div', 'nav-scroll');
+	var boxUl = document.createElement("ul");
+	for(var i = 0; i < 6; i++) {
+		var aLi = document.createElement("li");
+		if(type == i) {
+			aLi.className = 'active';
+		}
+		if(i == 0) {
+			var aA = creatClassDom('a', 'item', {
+				'href': '/new_web/index.html'
+			});
+			aA.innerHTML = '推荐';
+			aLi.appendChild(aA);
+		} else if(i == 1) {
+			var aA = creatClassDom('a', 'item', {
+				'href': '/cars/0-0-0-0-0-0-0-0-0-0-0-0-0/'
+			});
+			aA.innerHTML = '车型库';
+			aLi.appendChild(aA);
+		} else if(i == 2) {
+			var aA = creatClassDom('a', 'item', {
+				'href': '/new_web/html/hotshow.html'
+			});
+			aA.innerHTML = '热门节目';
+			aLi.appendChild(aA);
+		} else if(i == 3) {
+			var aA = creatClassDom('a', 'item', {
+				'href': '/new_web/html/discusslist.html'
+			});
+			aA.innerHTML = '话题';
+			aLi.appendChild(aA);
+		} else if(i == 4) {
+			var aA = creatClassDom('a', 'item', {
+				'href': '/new_web/html/community.html'
+			});
+			aA.innerHTML = '圈子' + (msgData == undefined || msgData.community == 0 ? '' : ('<em class="dot"></em>'));
+			aLi.appendChild(aA);
+		} else if(i == 5) {
+			var aA = creatClassDom('a', 'item user', {
+				'href': '/new_web/html/usercenter.html'
+			});
+			aA.innerHTML = '个人中心';
+			var levelDiv = creatClassDom('div', 'nav2-level', {
+				'id': 'userLevel'
+			});
+			aLi.appendChild(aA);
+			if(i == type) {
+				var leveltype = document.getElementById("navActive").value;
+				var levelUl = creatClassDom('ul', '');
+				var itemLevel = ['<a href="/new_web/html/usercenter_comment.html" class="item-level">评论</a>',
+					'<a href="/new_web/html/usercenter_at.html" class="item-level">@我的</a>',
+					'<a href="/new_web/html/usercenter_praise.html" class="item-level">赞</a>',
+					'<a href="/new_web/html/usercenter_private.html" class="item-level">私信</a>',
+					'<a href="/new_web/html/usercenter_fans.html?from=follow" class="item-level">我的好友</a>',
+					'<a href="/new_web/html/usercenter_message.html" class="item-level">系统消息</a>',
+					'<a href="/new_web/html/usercenter_draft.html" class="item-level">我的草稿</a>',
+					'<a href="/new_web/html/usercenter_collect.html" class="item-level">我的收藏</a>',
+					'<a href="/new_web/html/usercenter_blacklist.html" class="item-level">黑名单</a>'
+				]
+				for(var j = 0; j < 9; j++) {
+					var levelLi = creatClassDom('li', '');
+					if(j == leveltype) {
+						levelLi.className = 'level-active';
+					}
+					levelLi.innerHTML = itemLevel[j];
+					levelUl.appendChild(levelLi);
+				}
+				levelDiv.appendChild(levelUl);
+
+				aLi.appendChild(scrollDiv).appendChild(levelDiv);
+			}
+
+		}
+		boxUl.appendChild(aLi);
+	}
+	box.appendChild(navDiv).appendChild(boxUl);
+	if(wh - 90 < 753) { //90=头部高度 753=nav高度
+		Od.CustomScroll({
+			target: 'nav-scroll',
+			height: wh - 120 - 50 - 71 * 6, //120=底部高度加上下10像素距离  50=顶部高度  71=每个导航高度  10边角料
+			width: 152,
+			barWidth: 3
+		});
+	}
+
+}
+//sns列表
+function d_SnsList(boxname, data, type) { //type 0首页 1个人中心  2收藏  3草稿  4at 5微文 6文章  7对方个人中心 8热门节目 9话题 10用户观点 11圈子
+	var hasPlayer = false; //是否有视频
+	var hasParent = false; //是否是转发
+	var parentId = 0; //转发id
+	var isParentPlayer = false; //是否为转发视频
+	var box = document.getElementById(boxname);
+	if(type == 5 || (type == 9 && data.length == undefined) || (type == 10 && data.length == undefined)) {
+		var deArr = [];
+		deArr.push(data);
+		data = deArr;
+	}
+	var l = data.length;
+	for(var i = 0; i < l; i++) {
+		if(data[i].isflag == 1 || (data[i].resourceid == 0 && data[i].title == '')) continue;
+		if((type != 1 && type != 3) && (data[i].isflag == -1 || data[i].isflag == -2 || data[i].isflag == -3)) continue;
+		if(type != 3 && data[i].user == null) continue;
+		if(type != 3 && type != 5 && type != 6) {
+			if(!listUnique(data[i])) continue;
+		}
+		hasPlayer = false;
+		hasParent = false;
+		var oDiv = creatClassDom('div', 'item statistic_item', {
+			'resourceid': data[i].resourceid,
+			'resourcetype': data[i].snstype,
+			'snsid': data[i].id
+		});
+		if(type == 0 && newCount <= 10) {
+			if(boxname == 'recommendBox') {
+				oDiv.className = 'item statistic_item recycle_item';
+				oDiv.setAttribute('feedtype', data[i].feedtype);
+				newCount++;
+				if(newCount <= 10) {
+					(function(newCount) {
+						oDiv.onclick = function() {
+							_czc.push(['_trackEvent', '首页', '帖子_' + newCount, '', '', '']);
+						}
+					})(newCount);
+				}
+			}
+			if(boxname == 'snsBox') {
+				if(i <= (10 - newCount)) {
+					(function(newCount, i) {
+						oDiv.onclick = function() {
+							_czc.push(['_trackEvent', '首页', '帖子_' + (newCount + i + 1), '', '', '']);
+						}
+					})(newCount, i);
+				}
+			}
+		}
+		if(type == 11 && data[i].communitylist.length > 0) { //圈子
+			var cl = data[i].communitylist.length;
+			for(var c = 0; c < cl; c++) {
+				if(data[i].communitylist[c].isfans == 1) {
+					var belong = data[i].communitylist[c];
+					break;
+				}
+			}
+			var comDiv = creatClassDom('div', 'item-community clearfix');
+			var comHref = '/new_web/html/community_details.html?id=' + belong.id;
+			comDiv.innerHTML = '<span class="fl">来自 <a href="' + comHref + '">' + belong.name + '</a></span>' +
+				'<a href="' + comHref + '" class="item-community-skip fr"><i class="icon icon-right"></i></a>';
+			oDiv.appendChild(comDiv);
+		}
+		var icDiv = creatClassDom('div', 'item-content');
+		var contDiv = creatClassDom('div', 'content clearfix');
+		if(data[i].snstype == 0 || data[i].resourcetype == 0) { //长文章
+			oDiv.className += ' thread';
+			if(type == 0 || type == 11) {
+				if(data[i].user != null && data[i].user.isfollow != 0 && data[i].showtype != 3) {
+					icDiv.appendChild(d_SnsUser(data[i], type, data[i].createtime)); //user
+				}
+			} else {
+				if(type != 3) {
+					icDiv.appendChild(d_SnsUser(data[i], type, data[i].createtime)); //user
+				}
+			}
+			contDiv = d_SnsThread(data[i], type);
+			oDiv.appendChild(icDiv).appendChild(contDiv);
+		} else if(data[i].snstype == 2 || data[i].snstype == 3 || data[i].snstype == 9 || data[i].snstype == 10) { //微文、转发、老司机观点、用户观点
+			oDiv.className += ' microessay';
+			if(data[i].snstype == 9) {
+				data[i].user.self_isofficialdiscuss = true;
+			}
+			icDiv.appendChild(d_SnsUser(data[i]));
+			contDiv = d_SnsEssay(data[i], type);
+			oDiv.appendChild(icDiv).appendChild(contDiv);
+			//			if(isLogin) {
+			d_SnsActions(oDiv, data[i], type, false);
+			//			}
+			//			d_SnsEssay(data[i], type);
+			if(type != 5 && type != 10) {
+				if(type == 9) {
+					var cName = 'infobox discuss-info comment hide';
+				} else {
+					var cName = 'infobox comment hide';
+				}
+				var inputDiv = creatClassDom('div', cName, {
+					'id': 'infobox' + data[i].id
+				});
+				inputDiv.innerHTML = '<span class="triangle"><em class="tri-depth"></em></span>' +
+					'<div id="infoMsgBox" class="info-msg">' +
+					'<div class="msg-textarea" id="msgText' + data[i].id + '"></div>' +
+					'<div class="msg-list"><div id="msgBox' + data[i].id + '" class="msg-box"></div>' +
+					'<div class="replay-more"><a href="' +
+					'/new_web/html/microessay.html?resourceId=' + data[i].resourceid + '&resourceType=' + data[i].snstype + '"' +
+					' class="text-primary hide" id="replayMore' + data[i].id + '" target="_blank">查看更多评论</a></div></div></div>';
+				oDiv.appendChild(inputDiv);
+			}
+		}
+		box.appendChild(oDiv);
+		if(hasPlayer) {
+			if(isParentPlayer && data[i].original != null) {
+				Od.VideoPlayer({
+					width: 668,
+					height: 376,
+					source: (data[i].original.list[0].videourl.sd == '' ? data[i].original.list[0].videourl.hd : data[i].original.list[0].videourl.sd), //默认播放资源
+					cover: data[i].original.list[0].image.url, //封面图
+					playerId: data[i].id //生成视频播放器容器id后缀，需保证唯一性。示例目标id为：#player-layer
+				});
+			} else {
+				Od.VideoPlayer({
+					width: 668,
+					height: 376,
+					source: (data[i].list[0].videourl.sd == '' ? data[i].list[0].videourl.hd : data[i].list[0].videourl.sd), //默认播放资源
+					cover: data[i].list[0].image.url, //封面图
+					playerId: data[i].id //生成视频播放器容器id后缀，需保证唯一性。示例目标id为：#player-layer
+				});
+			}
+		}
+		if(type == 5 || type == 10) {
+			window._bd_share_config = {
+				"common": {
+					"bdSnsKey": {},
+					"bdText": "",
+					"bdMini": "2",
+					"bdMiniList": false,
+					"bdPic": "",
+					"bdStyle": "1",
+					"bdSize": "32"
+				},
+				"share": {}
+			};
+			with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' + ~(-new Date() / 36e5)];
+		}
+		box.style.opacity = 1;
+	}
+
+	function d_SnsThread(data, type) { //帖子
+		var contDiv = creatClassDom('div', 'content clearfix');
+		if(data.showtype != 3) {
+			var coverImg = Od.ImageUrl({
+				returnHtml: true,
+				type: 1,
+				w: 210,
+				h: 118,
+				gravity: 'Center',
+				hash: data.image == null ? '' : (data.image.url == undefined ? '' : data.image.url)
+			});
+			if(data.isflag == -1 || data.isflag == -2 || data.isflag == -3) {
+				contDiv.innerHTML = '<a href="javascript:;"' +
+					' class="c-img fl" target="_blank">' + coverImg + '</a>';
+			} else {
+				contDiv.innerHTML = '<a href="/thread/' + data.resourceid + '.html"' +
+					' class="c-img fl" target="_blank">' + coverImg + '</a>';
+			}
+			var infoDiv = creatClassDom('div', 'info fr');
+			var tableDiv = creatClassDom('div', 'info-table');
+			var cellDiv = creatClassDom('div', 'info-cell clearfix');
+			var titleH3 = creatClassDom('h3', 'info-title');
+			if(data.isflag == 0) {
+				titleH3.innerHTML = '<a href="/thread/' + data.resourceid + '.html" class="text-default" target="_blank">' + data.title + '</a>';
+			} else if(data.isflag == -2 || data.isflag == -3) { //转码
+				titleH3.innerHTML = '<a href="javascript:;" class="text-default">' + data.title + '(视频正在转码中，稍后就能看到啦！)</a>';
+			} else if(data.isflag == -1) { //草稿
+				titleH3.innerHTML = '<a href="/thread/update?id=' + data.resourceid + '&isDraft=-1" class="text-default">' + data.title + '</a>';
+			}
+			cellDiv.appendChild(titleH3);
+			var footDiv = creatClassDom('div', 'info-footer clearfix');
+			if(type == 0 || type == 2 || type == 4 || type == 5 || type == 7 || type == 8 || type == 11) {
+				var countDiv = creatClassDom('div', 'content-count fl');
+				var countHtml = '';
+				if((type == 0 || type == 11) && data.user.isfollow == 0) {
+					countDiv.className = 'content-count fr';
+					var userLogo = Od.ImageUrl({
+						isHeadPic: true,
+						returnHtml: true,
+						type: 1,
+						w: 20,
+						h: 20,
+						gravity: 'Center',
+						hash: data.user.image.url
+					});
+					var countflDiv = creatClassDom('div', 'content-count fl');
+					userHtml = '<a href="/new_web/html/userlook.html?lookat=' + data.user.id + '" class="user-left-info fl" target="_blank">' +
+						'<i class="user-logo">' + userLogo + '</i>' + data.user.name + '</a>';
+					if(data.user.isauthenticated == 1) {
+						userHtml += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip"></i></a>';
+					}
+					countflDiv.innerHTML = userHtml;
+					footDiv.appendChild(countflDiv);
+				}
+				if(type == 5) {
+					//					countDiv.className = 'content-count fr';
+					countHtml += '<a href="/thread/' + data.resourceid + '.html" class="counter time" target="_blank">' + data.createtime + '</a>';
+				}
+				countHtml += '<a href="/thread/' + data.resourceid + '.html" class="counter" target="_blank">点赞 ' + data.praisecount + '</a>' +
+					'<a href="/thread/' + data.resourceid + '.html#infoMsgBox" class="counter" target="_blank">评论 ' + data.commentcount + '</a>';
+				countDiv.innerHTML = countHtml;
+				footDiv.appendChild(countDiv);
+				//				if(type == 2 || type == 7) {
+				//					var countfrDiv = creatClassDom('div', 'content-count fr');
+				//					var favoriteA = creatClassDom('a', 'counter', {
+				//						'href': 'javascript:;',
+				//						'isfavorite': data.isfavorite,
+				//						'resourceId': data.resourceid,
+				//						'resourceType': data.snstype
+				//					});
+				//					if(type == 2) {
+				//						favoriteA.className = 'delete';
+				//						favoriteA.innerHTML = '取消收藏';
+				//					} else {
+				//						if(data.isfavorite == 1) {
+				//							favoriteA.innerHTML = '已收藏';
+				//						} else {
+				//							favoriteA.innerHTML = '收藏';
+				//						}
+				//					}
+				//					favoriteA.onclick = function(e) {
+				//						toggleFavorite(this, type);
+				//					}
+				//					countfrDiv.appendChild(favoriteA);
+				//					footDiv.appendChild(countfrDiv);
+				//				}
+			} else if(type == 1) {
+				var countDiv = creatClassDom('div', 'content-count fl');
+				//				if(hasParent){
+				//					countDiv.className = 'content-count fl';
+				//				}
+				if(data.isflag == 0) {
+					//					var countHtml = '<a href="/thread/' + data.resourceid + '.html" class="counter time" target="_blank">' + data.createtime + '</a>';
+					var countHtml = '<a href="/thread/' + data.resourceid + '.html" class="counter" target="_blank">点赞 ' + data.praisecount + '</a>' +
+						'<a href="/thread/' + data.resourceid + '.html#infoMsgBox" class="counter" target="_blank">评论 ' + data.commentcount + '</a>';
+				} else {
+					//					var countHtml = '<a href="javascript:;" class="counter time">' + data.createtime + '</a>';
+					var countHtml = '<a href="javascript:;" class="counter">点赞 ' + data.praisecount + '</a>' +
+						'<a href="javascript:;" class="counter">评论 ' + data.commentcount + '</a>';
+				}
+				countDiv.innerHTML = countHtml;
+				footDiv.appendChild(countDiv);
+			} else if(type == 3) {
+				var flDiv = creatClassDom('div', 'fl');
+				var lineSpan = creatClassDom('span', 'line');
+				var amendA = creatClassDom('a', 'text-primary', {
+					'href': 'javascript:;'
+				});
+				amendA.innerHTML = '修改';
+				amendA.onclick = function() {
+					//							if(data.isflag == -1) { //草稿
+					window.location.href = '/thread/update?id=' + data.resourceid + '&isDraft=-1';
+					//								document.getElementById("snsLoadNo").value = '1';
+					//							} else {
+					//								isEditorOrDel(data.resourceid, data.snstype, 1);
+					//							}
+				}
+				var deleteA = creatClassDom('a', 'text-danger', {
+					'href': 'javascript:;'
+				});
+				deleteA.innerHTML = '删除';
+				deleteA.onclick = function(e) {
+					Od.Alert({
+						html: '删除文章？',
+						cancelBtn: true,
+						target: Od.Target(e),
+						callBack: function() {
+							getSnsState(data.resourceid, data.resourcetype, 2);
+						}
+					});
+				}
+				flDiv.appendChild(amendA);
+				flDiv.appendChild(lineSpan);
+				flDiv.appendChild(deleteA);
+				footDiv.appendChild(flDiv);
+			} else if(type == 6) {
+				var nameDiv = creatClassDom('div', 'content-count fl');
+				nameDiv.innerHTML = '<a href="javascript:;" class="counter time" target="_blank">' + data.user.name + '</a>';
+				var countDiv = creatClassDom('div', 'content-count fr');
+				countDiv.innerHTML = '<a href="/thread/' + data.resourceid + '.html" class="counter">点赞 ' + data.praisecount + '</a>' +
+					'<a href="/thread/' + data.resourceid + '.html#infoMsgBox" class="counter">评论 ' + data.commentcount + '</a>';
+				footDiv.appendChild(nameDiv);
+				footDiv.appendChild(countDiv);
+			}
+			contDiv.appendChild(infoDiv).appendChild(tableDiv).appendChild(cellDiv).appendChild(footDiv);
+		} else {
+			//三图
+			var threeDiv = creatClassDom('div', 'three-box');
+			var topicImgList = data.topicimagelist
+			var topicImgL = topicImgList.length;
+			var threeImgDiv = creatClassDom('div', 'three-box-img ');
+			for(var t = 0; t < topicImgL; t++) {
+				var imgListA = creatClassDom('a', 'c-img-three clearfix', {
+					'href': '/thread/' + data.resourceid + '.html',
+					'target': '_blank'
+				});
+				var coverImg = Od.ImageUrl({
+					returnHtml: false,
+					type: 1,
+					w: 210,
+					h: 118,
+					gravity: 'Center',
+					hash: topicImgList[t].url
+				});
+				imgListA.appendChild(coverImg);
+				threeImgDiv.appendChild(imgListA);
+			}
+			threeDiv.appendChild(threeImgDiv)
+			var threeH3 = creatClassDom('h3', 'info-title');
+			threeH3.innerHTML = '<a href="/thread/' + data.resourceid + '.html" class="text-default" target="_blank">' + data.title + '</a>';
+			threeDiv.appendChild(threeH3);
+			contDiv.appendChild(threeDiv);
+			var threeUserDiv = creatClassDom('div', 'three-user');
+			contDiv.appendChild(threeUserDiv).appendChild(d_SnsUser(data)); //user
+		}
+		return contDiv;
+	}
+
+	function d_SnsEssay(data, type) { //微文
+		var contDiv = creatClassDom('div', 'content clearfix');
+		//含有语音
+		if((data.snstype == 9 || data.snstype == 10) && data.audio != undefined && data.audio.hash != '') {
+			var audioDiv = creatClassDom('div', 'audio-chunk');
+			var audio = Od.AudioPlayer({
+				id: 'audio' + data.id,
+				api: 'http://m.laosiji.com/api/carSelectionAudioPlay',
+				hash: data.audio.hash,
+				duration: data.audio.playtime,
+				title: data.discusstitle == undefined ? data.title : data.discusstitle
+			});
+			audioDiv.innerHTML = audio;
+			contDiv.appendChild(audioDiv);
+		}
+		var linkA = creatClassDom('a', 'essay-link'); //cotent>text
+		var textP = creatClassDom('p', 'text text-default'); //cotent>text
+		var qvodDiv = creatClassDom('div', 'qvod-box'); //cotent>qvod-box
+		var countHtml = '';
+		if(type == 9) {
+			if(data.snstype == 9) {
+				var lookAllUrl = '/thread/' + data.resourceid + '.html';
+			} else {
+				var lookAllUrl = '/new_web/html/userpoint.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype;
+			}
+		} else {
+			var lookAllUrl = '/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype;
+		}
+		var textHtml = Od.TransText({
+			text: data.description,
+			data: data,
+			lookAtAllUrl: lookAllUrl
+		});
+
+		//		if(data.snstype==3&&data.list!=null&&data.list.length>=1&&data.list[0].image.hash!=''){
+		//			textHtml+=' [http://15feng.cn/p/'+data.list[0].image.hash+']';
+		//		}
+		//微文正文
+		textP.innerHTML = textHtml;
+		if(type == 5 || type == 10) {
+			textP.className = 'text';
+			textP.className = 'text';
+			linkA.href = 'javascript:;';
+		} else if(type == 9) {
+			if(data.snstype == 9) {
+				linkA.href = '/thread/' + data.resourceid + '.html';
+				var lsjPointSpan = creatClassDom('span', 'lsj-point-sign');
+				lsjPointSpan.innerHTML = '老司机观点';
+				contDiv.appendChild(lsjPointSpan);
+			} else {
+				linkA.href = '/new_web/html/userpoint.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype;
+			}
+			linkA.target = '_blank';
+		} else {
+			linkA.href = '/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype;
+			linkA.target = '_blank';
+		}
+		contDiv.appendChild(linkA).appendChild(textP);
+		//非@列表
+		if(data.original == null && data.list.length > 0) {
+			var MediaBoxW = 0;
+			if(type == 5) {
+				MediaBoxW = 598;
+				if(hasParent) {
+					MediaBoxW = 558;
+				}
+			} else {
+				MediaBoxW = 640;
+				if(hasParent) {
+					MediaBoxW = 600;
+				}
+			}
+			var MediaBoxW = 0;
+			if(type == 5) {
+				MediaBoxW = 598;
+				if(hasParent) {
+					MediaBoxW = 558;
+				}
+			} else {
+				MediaBoxW = 640;
+				if(hasParent) {
+					MediaBoxW = 600;
+				}
+			}
+			Od.MediaBox({ //插入九宫格
+				container: qvodDiv, //九宫格插入区域
+				width: MediaBoxW, //放大图片的区域宽度
+				cellWidth: 110, //单元格宽度
+				cellHeight: 110, //单元格高度
+				list: data.list //sns的list（组件中过滤视频，保留图片，这里只给出数据即可）
+			});
+			contDiv.appendChild(qvodDiv);
+		}
+		//含视频的微文
+		if(data.list.length == 1 && data.list[0].type == 3) {
+			hasPlayer = true;
+			var playId = data.id;
+			if(hasParent) {
+				isParentPlayer = true;
+				playId = parentId;
+			};
+			qvodDiv.innerHTML = '<div id="player' + playId + '" class="player">' +
+				'<input type="hidden" class="sd" value="' + data.list[0].videourl.hd + '">' +
+				'<input type="hidden" class="hd" value="' + data.list[0].videourl.sd + '">' +
+				'</div>';
+			contDiv.appendChild(qvodDiv);
+		}
+		//微文操作
+		if(hasParent) { //如果为转发
+			//			var flDiv = creatClassDom('a', 'fl time', {
+			//				'href': '/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype
+			//			});
+			//			flDiv.innerHTML = data.createtime;
+			//			var frDiv = creatClassDom('div', 'fr');
+			//			frDiv.appendChild(praiseA);
+			//			frDiv.appendChild(commentA);
+			//			frDiv.appendChild(forwardA);
+			//			countDiv.appendChild(flDiv);
+			//			countDiv.appendChild(frDiv);
+			//			contDiv.appendChild(countDiv);
+			d_SnsActions(contDiv, data, type, true);
+		}
+		//				else {
+		//			if(type != 1) {
+		//				if(type != 10) {
+		//					countDiv.appendChild(forwardA);
+		//				}
+		//				countDiv.appendChild(commentA);
+		//				countDiv.appendChild(praiseA);
+		//				if(type == 0 || type == 2 || type == 5 || type == 7) { //含有收藏系列按钮
+		//					var favoriteA = creatClassDom('a', 'counter favor like', {
+		//						'href': 'javascript:;',
+		//						'isfavorite': data.isfavorite,
+		//						'resourceId': data.resourceid,
+		//						'resourceType': data.snstype
+		//					});
+		//					if(type == 2) {
+		//						favoriteA.className = 'delete fr follow';
+		//						favoriteA.innerHTML = '取消收藏';
+		//					} else {
+		//						if(data.isfavorite == 1) {
+		//							favoriteA.className = 'counter favor like liked';
+		//							favoriteA.innerHTML = '<i class="icon icon-star"></i> 已收藏';
+		//						} else {
+		//							favoriteA.innerHTML = '<i class="icon icon-star"></i> 收藏';
+		//						}
+		//					}
+		//					favoriteA.onclick = function(e) {
+		//						toggleFavorite(this, type);
+		//					}
+		//					countDiv.appendChild(favoriteA);
+		//				}
+		//			} else if(type == 1) {
+		//				var flDiv = creatClassDom('div', 'fl');
+		//				var frDiv = creatClassDom('div', 'fr follow');
+		//				var deleteA = creatClassDom('a', 'delete', {
+		//					'href': 'javascript:;'
+		//				});
+		//				deleteA.innerHTML = '删除';
+		//				deleteA.onclick = function(e) {
+		//					Od.Alert({
+		//						html: '删除微文？',
+		//						cancelBtn: true,
+		//						target: Od.Target(e),
+		//						callBack: function() {
+		//							isEditorOrDel(data.resourceid, data.snstype, 2);
+		//						}
+		//					});
+		//				};
+		//				frDiv.appendChild(deleteA);
+		//				flDiv.appendChild(forwardA);
+		//				flDiv.appendChild(commentA);
+		//				flDiv.appendChild(praiseA);
+		//				countDiv.appendChild(flDiv);
+		//				countDiv.appendChild(frDiv);
+		//			}
+		//		}
+		if(data.original != null) {
+			parentId = data.id;
+			if(data.original.original != null) {
+				contDiv.appendChild(d_SnsForward(data.original.original, type));
+			} else {
+				contDiv.appendChild(d_SnsForward(data.original, type));
+			}
+		}
+		if(type == 5 || type == 10) {
+			if(hasParent) {
+				if(data.original != null) {
+					var shareDiv = creatClassDom('div', 'item-share clearfix');
+					var tDiv = creatClassDom('div', 'info-share fl');
+					tDiv.innerHTML = data.publishtime + '&nbsp;&nbsp;|&nbsp;&nbsp;阅读' + numberCalc(data.cilckcount);
+					shareDiv.appendChild(tDiv);
+					var bdDiv = creatClassDom('div', 'bd-share fr');
+					bdDiv.innerHTML = '<div class="share bdsharebuttonbox clearfix"><span>分享到：</span>' +
+						'<a href="#" class="lsjbg lsjbg-qq bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>' +
+						'<a href="#" class="lsjbg lsjbg-wx bds_weixin" data-cmd="weixin" title="分享到微信"></a>' +
+						'<a href="#" class="lsjbg lsjbg-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>' +
+						'<a href="#" class="lsjbg lsjbg-qqzone bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>' +
+						'</div>';
+					shareDiv.appendChild(bdDiv);
+					contDiv.appendChild(shareDiv);
+				}
+			} else {
+				var shareDiv = creatClassDom('div', 'item-share clearfix');
+				var tDiv = creatClassDom('div', 'info-share fl');
+				tDiv.innerHTML = data.publishtime + '&nbsp;&nbsp;|&nbsp;&nbsp;阅读' + numberCalc(data.cilckcount);
+				shareDiv.appendChild(tDiv);
+				var bdDiv = creatClassDom('div', 'bd-share fr');
+				bdDiv.innerHTML = '<div class="share bdsharebuttonbox clearfix"><span>分享到：</span>' +
+					'<a href="#" class="lsjbg lsjbg-qq bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>' +
+					'<a href="#" class="lsjbg lsjbg-wx bds_weixin" data-cmd="weixin" title="分享到微信"></a>' +
+					'<a href="#" class="lsjbg lsjbg-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>' +
+					'<a href="#" class="lsjbg lsjbg-qqzone bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>' +
+					'</div>';
+				shareDiv.appendChild(bdDiv);
+				contDiv.appendChild(shareDiv);
+			}
+		}
+		return contDiv;
+	}
+
+	function d_SnsForward(data, type) { //转发
+		hasParent = true;
+		var parentDiv = creatClassDom('div', 'parent');
+		if(data.resourceid != 0) {
+			parentDiv.appendChild(d_SnsUser(data));
+			if(data.snstype == 0) {
+				parentDiv.appendChild(d_SnsThread(data, type));
+			} else {
+				parentDiv.appendChild(d_SnsEssay(data, type));
+			}
+		} else {
+			parentDiv.innerHTML = '<p>真遗憾，原文已被删除</p>';
+		}
+		return parentDiv;
+	}
+
+	function d_SnsActions(box, data, type, isParent) { //sns行为
+		var favoriteA = creatClassDom('a', 'counter favor like', {
+			'href': 'javascript:;',
+			'isfavorite': data.isfavorite,
+			'resourceId': data.resourceid,
+			'resourceType': data.snstype
+		});
+		if(data.isfavorite == 1) {
+			favoriteA.className = 'counter favor like liked';
+			favoriteA.innerHTML = '<i class="icon icon-star"></i> 已收藏';
+		} else {
+			favoriteA.innerHTML = '<i class="icon icon-star"></i> 收藏';
+		}
+		//		}
+		favoriteA.onclick = function(e) {
+			toggleFavorite(this, type);
+		}
+		var forwardA = creatClassDom('a', 'counter', {
+			'href': 'javascript:;'
+		});
+		if(type != 9) {
+			forwardA.innerHTML = '<i class="icon icon-forward"></i> ' + (data.forward == 0 ? '转发' : data.forward);
+			forwardA.onclick = function() {
+				if(type != 5) {
+					openForward(data);
+				} else {
+					getFoward();
+				}
+			}
+		}
+		var commentA = creatClassDom('a', 'counter', {
+			'data-toggle': '0'
+		});
+		if((hasParent && data.original == null) || type == 1) { //个人中心的转发
+			commentA.href = '/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype;
+			commentA.target = '_blank';
+		} else {
+			commentA.href = 'javascript:;';
+			commentA.onclick = function() {
+				var that = this;
+				if(type == 5 || type == 10) {
+					getComment();
+				} else {
+					var toggle = this.getAttribute('data-toggle');
+					if(toggle == 0) {
+
+						if(isLogin) {
+
+							commonInput({
+								target: document.getElementById('msgText' + data.id),
+								type: 'comment',
+								id: data.id,
+								resourceId: data.resourceid,
+								resourceType: data.snstype,
+								maxCharCount: 140,
+								postUrl: '/api/addComment',
+								hideAsycInput: (data.snstype == 9 || data.snstype == 10 ? true : false),
+								beforeFunc: function() {},
+								successFunc: function(res) {
+									d_Details.commentList(data.id, res.body.comment, 2);
+									that.setAttribute('isonce', '1');
+								},
+								failFunc: function() {}
+							});
+						}
+						if(type != 5) {
+							if(type == 9 || type == 10) {
+								document.getElementById("infobox" + data.id).className = 'infobox discuss-info comment';
+							} else {
+								document.getElementById("infobox" + data.id).className = 'infobox comment';
+							}
+							d_Loading.insert('replayMore' + data.id);
+							Od.Ajax({
+								method: api.method,
+								url: api.comment,
+								data: {
+									'resourceId': data.resourceid,
+									'resourceType': data.snstype,
+									'orderId': 1,
+									'pageNo': 1,
+									'pageSize': 5
+								},
+								asyc: true,
+								success: function(res) {
+									var commentData = res.body.comment.list;
+									d_Loading.remove('replayMore' + data.id);
+									d_Details.commentList(data.id, commentData);
+									var listLength = document.getElementById("msgBox" + data.id).children.length;
+									if(listLength == 0) {
+										document.getElementById("msgBox" + data.id).innerHTML = '<p class="nothing">赶紧发表您的评论吧！</p>';
+									}
+									if(5 < res.body.comment.count) {
+										document.getElementById("replayMore" + data.id).className = 'text-primary';
+									}
+								}
+							});
+						} else {
+							document.getElementById("infobox" + data.id).className = 'infobox comment';
+						}
+					} else {
+						closeCommonInput('infobox' + data.id, 2);
+					}
+					this.setAttribute('data-toggle', 1 - toggle);
+				}
+			}
+		}
+		commentA.innerHTML = '<i class="icon icon-comment"></i> ' + (data.commentcount == 0 ? '评论' : data.commentcount);
+		var praiseA = creatClassDom('a', 'counter like', {
+			'href': 'javascript:;',
+			'rel': 'like'
+		});
+		var praisecount = (data.praisecount == 0 ? '赞' : data.praisecount);
+		if(data.ispraise == 1) {
+			praiseA.className = 'counter like liked';
+			praiseA.setAttribute('rel', 'unlike');
+			if(data.praisecount == 0) {
+				praisecount = 1;
+			}
+		}
+		praiseA.innerHTML = '<i class="icon icon-praise"></i> <span>' + praisecount + '</span>';
+		praiseA.onclick = function() {
+			if((type == 5 || type == 10) && data.ispraise == 1) {
+				if(document.querySelector('.infobox').className == 'infobox praise') {
+					togglePraise(data, this, data.snstype);
+				} else {
+					getPraise(2);
+				}
+			} else {
+				if((type == 5 || type == 10) && data.ispraise == 0 && data.praisecount != 0) {
+					getPraise(2);
+				}
+				togglePraise(data, this, data.snstype);
+			}
+		}
+		if(isParent) { //如果为转发
+			var countDiv = creatClassDom('div', 'content-count clearfix');
+			var flDiv = creatClassDom('a', 'fl time', {
+				'href': '/new_web/html/microessay.html?resourceId=' + data.resourceid + '&resourceType=' + data.snstype
+			});
+			flDiv.innerHTML = data.createtime;
+			var frDiv = creatClassDom('div', 'fr');
+			frDiv.appendChild(praiseA);
+			frDiv.appendChild(commentA);
+			frDiv.appendChild(forwardA);
+			countDiv.appendChild(flDiv);
+			countDiv.appendChild(frDiv);
+			box.appendChild(countDiv);
+		} else {
+			var actDiv = creatClassDom('div', 'item-actions clearfix');
+			if(type == 9 || type == 10 || (type == 4 && attype == 3)) {
+				actDiv.appendChild(commentA);
+				actDiv.appendChild(praiseA);
+				actDiv.className = "item-actions item-actions2 clearfix"
+			} else {
+				actDiv.appendChild(favoriteA);
+				actDiv.appendChild(forwardA);
+				actDiv.appendChild(commentA);
+				actDiv.appendChild(praiseA);
+			}
+			box.appendChild(actDiv);
+		}
+	}
+
+	function d_SnsUser(uData) { //sns用户
+		var userData = uData.user;
+		if(userData != undefined) {
+			var html = '';
+			var userDiv = creatClassDom('div', 'user clearfix');
+			if(hasParent) {
+				userDiv.innerHTML = '@<a href="/new_web/html/userlook.html?lookat=' + userData.id + '" class="user-name" target="_blank">' + userData.name + '</a>';
+			} else {
+				if(uData.showtype == 3) {
+					var WandH = uData.showtype == 3 ? 20 : 40;
+					var userLogo = Od.ImageUrl({
+						isHeadPic: true,
+						returnHtml: true,
+						type: 1,
+						w: WandH,
+						h: WandH,
+						gravity: 'Center',
+						hash: userData.image.url
+					});
+					var infoDiv = creatClassDom('div', 'user-info fl');
+					infoHtml = '<a href="/new_web/html/userlook.html?lookat=' + userData.id + '" class="user-left-info fl" target="_blank"><i class="user-logo">' +
+						userLogo + '</i>' + userData.name + '</a>';
+					if(userData.isauthenticated == 1) {
+						infoHtml += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip"></i></a>';
+					}
+					infoDiv.innerHTML = infoHtml;
+					userDiv.appendChild(infoDiv);
+					var rightDiv = creatClassDom('div', 'user-text fr');
+					if(uData.user.isfollow != 0) {
+						rightDiv.innerHTML = '<span class="sig-text">已关注·' + getSignature(userData) + '</span>';
+					} else {
+						if(uData.snstype == 0) {
+							rightDiv.innerHTML = '<a href="/thread/' + uData.resourceid + '.html" class="sig-text">点赞 ' + uData.praisecount + ' 评论 ' + uData.commentcount + '</a>';
+						} else {
+							//							if(isLogin) {
+							var attDiv = creatClassDom('div', 'attention');
+							var attA = creatClassDom('a', 'btn btn-gray', {
+								'href': 'javascript:;'
+							});
+							attA.innerHTML = '<i class="icon icon-add"></i> 关注';
+							attA.onclick = function() {
+								if(!isLogin) {
+									window.location.href = '/login?isfrom=1';
+									return false;
+								}
+								Od.Ajax({
+									method: api.method,
+									url: api.followUser,
+									data: {
+										'userId': uData.user.id,
+										'type': 1
+									},
+									asyc: true,
+									success: function(res) {
+										if(res.code == 1) {
+											rightDiv.innerHTML = '<span class="sig-text">已关注·' + getSignature(userData) + '</span>';
+										}
+									}
+								});
+							}
+							attDiv.appendChild(attA);
+							rightDiv.appendChild(attDiv);
+							//							}
+						}
+					}
+					userDiv.appendChild(rightDiv);
+				} else {
+					userDiv.className = 'user user2'
+					var userLogo = Od.ImageUrl({
+						isHeadPic: true,
+						returnHtml: true,
+						type: 1,
+						w: 40,
+						h: 40,
+						gravity: 'Center',
+						hash: userData.image.url
+					});
+					var logoDiv = creatClassDom('div', 'user-logo-relat fl');
+					var logoHtml = '<a href="/new_web/html/userlook.html?lookat=' + userData.id + '" class="user-logo" target="_blank">' + userLogo;
+					userDiv.appendChild(logoDiv);
+					if(type == 5 || type == 10) {
+						Od.Ajax({
+							method: api.method, //方法
+							url: api.userInfo,
+							data: {
+								'userId': userData.id
+							},
+							asyc: true, //是否为异步
+							success: function(res) {
+								var floatUserDiv = creatClassDom('div', 'float-userbox');
+								userDiv.appendChild(floatUserDiv).appendChild(d_Usercenter.userInfo(res.body.user, 1));
+								logoDiv.onmouseover = floatUserDiv.onmouseover = function() {
+									floatUserDiv.style.display = 'block';
+								}
+								logoDiv.onmouseout = floatUserDiv.onmouseout = function() {
+									floatUserDiv.style.display = 'none';
+								}
+							}
+						});
+					}
+					if(type == 5 || type == 6 || type == 9 || type == 10) {
+						logoHtml += '<span>' + userData.name + '</span></a>';
+						if(userData.isauthenticated == 1) {
+							logoHtml += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip"></i></a>';
+						}
+						logoDiv.innerHTML = logoHtml;
+					} else {
+						logoHtml += '</a>';
+						logoDiv.innerHTML = logoHtml;
+						var infoDiv = creatClassDom('div', 'user-info fl');
+						var headDiv = creatClassDom('div', 'user-header');
+						var headHtml = '<a href="/new_web/html/userlook.html?lookat=' + userData.id + '" class="user-name" target="_blank">' + userData.name + '</a>';
+						if(userData.isauthenticated == 1) {
+							headHtml += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip"></i></a>';
+						}
+						headDiv.innerHTML = headHtml;
+						var footDiv = creatClassDom('div', 'user-footer');
+						var statusSpan = creatClassDom('span', 'status');
+						statusSpan.innerHTML = (userData.isfollow == 0 ? '' : '已关注·');
+						var authSpan = creatClassDom('span', 'authenticated');
+						var signature = Od.TransText({
+							text: userData.signature,
+							data: userData
+						});
+						var timeSpan = creatClassDom('span', 'status');
+						timeSpan.innerHTML = uData.publishtime;
+						authSpan.innerHTML = getSignature(userData);
+						if(type == 7) {
+							footDiv.appendChild(timeSpan);
+						} else {
+							footDiv.appendChild(statusSpan);
+							footDiv.appendChild(authSpan);
+						}
+						infoDiv.appendChild(headDiv);
+						infoDiv.appendChild(footDiv);
+						userDiv.appendChild(infoDiv);
+					}
+
+					//					if(type == 1 || type == 2) {
+					//					var userFrDiv = timeA = creatClassDom('div', 'user-actions fr');
+					//					var timeP = creatClassDom('p', 'time');
+					//					timeP.innerHTML = time;
+					//					userDiv.appendChild(timeP);
+					//				}
+					if(type == 0 || type == 5 || type == 6 || type == 7 || type == 9 || type == 10) {
+						//						if(isLogin) {
+						var attDiv = creatClassDom('div', 'attention fr');
+						if(userData.isfollow == 0 && userData.ismy == 0) { //&& type == 0
+							if(userData.ismy == 0) {
+								var attA = creatClassDom('a', 'btn btn-gray', {
+									'href': 'javascript:;'
+								});
+								attA.innerHTML = '<i class="icon icon-add"></i> 关注';
+								attA.onclick = function() {
+									if(!isLogin) {
+										window.location.href = '/login?isfrom=1';
+										return false;
+									}
+									Od.Ajax({
+										method: api.method,
+										url: api.followUser,
+										data: {
+											'userId': userData.id,
+											'type': 1
+										},
+										asyc: true,
+										success: function(res) {
+											if(res.code == 1) {
+												//											statusSpan.innerHTML = '已关注·';
+												attDiv.className = 'attention fr hide';
+											}
+										}
+									});
+								}
+								attDiv.appendChild(attA);
+							}
+						} else {
+							if(type == 5 || type == 6 || type == 9 || type == 10) {
+								attDiv.innerHTML = '<span class="atten-txt">已关注·' + getSignature(userData) + '</span>';
+							}
+						}
+						userDiv.appendChild(attDiv);
+						//						}
+						//					var countfrDiv = creatClassDom('div', 'content-count fr');
+						//					var favoriteA = creatClassDom('a', 'counter', {
+						//						'href': 'javascript:;',
+						//						'isfavorite': data.isfavorite,
+						//						'resourceId': data.resourceid,
+						//						'resourceType': data.snstype
+						//					});
+						//					if(type == 2) {
+						//						favoriteA.className = 'delete';
+						//						favoriteA.innerHTML = '取消收藏';
+						//					} else {
+						//						if(data.isfavorite == 1) {
+						//							favoriteA.innerHTML = '已收藏';
+						//						} else {
+						//							favoriteA.innerHTML = '收藏';
+						//						}
+						//					}
+						//					favoriteA.onclick = function(e) {
+						//						toggleFavorite(this, type);
+						//					}
+						//					countfrDiv.appendChild(favoriteA);
+						//					footDiv.appendChild(countfrDiv);
+						//				}
+					} else if(type == 1 || type == 2 || type == 3) {
+						if(!hasParent) {
+							if(uData.isflag == 0) {
+								var userFrDiv = timeA = creatClassDom('div', 'user-actions fr');
+								var timeP = creatClassDom('p', 'time');
+								var timeA = creatClassDom('span', '');
+								//								if(type == 5) {
+								//									timeA.href = 'javascript:;';
+								//								} else if(type == 9) {
+								//									if(uData.snstype == 9) {
+								//										timeA.href = '/thread/' + uData.resourceid + '.html';
+								//									} else {
+								//										timeA.href = '/new_web/html/userpoint.html?resourceId=' + uData.resourceid + '&resourceType=' + uData.snstype;
+								//									}
+								//									timeA.target = '_blank';
+								//								} else {
+								//									timeA.href = '/new_web/html/microessay.html?resourceId=' + uData.resourceid + '&resourceType=' + uData.snstype;
+								//									timeA.target = '_blank';
+								//								}
+								timeA.innerHTML = uData.publishtime;
+								timeP.appendChild(timeA);
+								userFrDiv.appendChild(timeP);
+								var acDiv = creatClassDom('div', 'actions');
+								//						var lineSpan = creatClassDom('span', 'line');
+								if(type == 1) {
+									if(uData.snstype == 0) {
+										var amendA = creatClassDom('a', 'amend', {
+											'href': 'javascript:;'
+										});
+										amendA.innerHTML = '修改';
+										amendA.onclick = function() {
+											if(uData.isflag == -1) { //草稿
+												window.location.href = '/thread/update?id=' + uData.resourceid + '&isDraft=-1';
+												document.getElementById("snsLoadNo").value = '1';
+											} else {
+												isEditorOrDel(uData.resourceid, uData.snstype, 1);
+											}
+										}
+										acDiv.appendChild(amendA);
+									}
+									var deleteA = creatClassDom('a', 'delete', {
+										'href': 'javascript:;'
+									});
+									deleteA.innerHTML = '删除';
+									deleteA.onclick = function(e) {
+										Od.Alert({
+											html: '删除文章？',
+											cancelBtn: true,
+											target: Od.Target(e),
+											callBack: function() {
+												if(uData.isflag == -1) { //草稿
+													getSnsState(uData.resourceid, uData.resourcetype, 2);
+												} else {
+													getSnsState(uData.resourceid, uData.snstype, 2);
+												}
+											}
+										});
+									}
+									acDiv.appendChild(deleteA);
+								} else if(type == 2) {
+									var favoriteA = creatClassDom('a', 'counter', {
+										'href': 'javascript:;',
+										'isfavorite': uData.isfavorite,
+										'resourceId': uData.resourceid,
+										'resourceType': uData.snstype
+									});
+									favoriteA.className = 'delete';
+									favoriteA.innerHTML = '取消收藏';
+									favoriteA.onclick = function(e) {
+										toggleFavorite(this, type);
+									}
+									acDiv.appendChild(favoriteA);
+								}
+
+								userFrDiv.appendChild(acDiv);
+								userDiv.appendChild(userFrDiv);
+							}
+						}
+					}
+				}
+			}
+		}
+		return userDiv;
+	}
+}
+//个人中心
+function D_Usercenter() {
+	this.userInfo = function(data, addtype, wh) { //addtype 0正常 1return
+		if(addtype == 1) {
+			var box = creatClassDom('div', 'user-box');
+		} else {
+			var box = document.getElementById("userCenterInfo");
+		}
+		var userLogo = Od.ImageUrl({
+			isHeadPic: true,
+			returnHtml: true,
+			type: 1,
+			w: addtype == 1 ? 100 : 140,
+			h: addtype == 1 ? 100 : 140,
+			gravity: 'Center',
+			hash: data.image.url
+		});
+		var html = '<div class="user-logo">' + userLogo;
+		if(data.isauthenticated == 1) {
+			html += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip-3x"></i></a>';
+		}
+		html += '</div><div class="user-info"><div class="user-name">';
+
+		if(snslisttype == 7 || addtype == 1) {
+			html += '<a href="/new_web/html/userlook.html?lookat=' + data.id + '" class="name" target="_blank">' + data.name + '</a>';
+		} else {
+			html += '<a href="javascript:;" class="name">' + data.name + '</a>';
+		}
+		if(data.sex == 1) {
+			html += '<i class="lsjbg lsjbg-male"></i></div>';
+		} else {
+			html += '<i class="lsjbg lsjbg-female"></i></div>';
+		}
+		html += '<div class="signature">' + getSignature(data) + '</div>';
+		var snscount = getSnsCount(data);
+		if(snslisttype == 7 || addtype == 1) {
+			html += '<div class="user-count clearfix">' +
+				'<div class="user-item"><a href="/new_web/html/userlook.html?lookat=' + data.id + '" class="counter" target="_blank">' + numberCalc(data.followcount) + '</a> 关注</div>' +
+				'<span class="line"></span>' +
+				'<div class="user-item"><a href="/new_web/html/userlook.html?lookat=' + data.id + '" class="counter" target="_blank">' + numberCalc(data.fanscount) + '</a> 粉丝</div>' +
+				'<span class="line"></span>' +
+				'<div class="user-item"><a href="/new_web/html/userlook.html?lookat=' + data.id + '" class="counter" target="_blank">' + snscount + '</a> 内容</div>' +
+				'</div></div>';
+		} else {
+			html += '<div class="user-count clearfix">' +
+				'<div class="user-item"><a href="/new_web/html/usercenter_fans.html?from=follow" class="counter">' + numberCalc(data.followcount) + '</a> 关注</div>' +
+				'<span class="line"></span>' +
+				'<div class="user-item"><a href="/new_web/html/usercenter_fans.html?from=fans" class="counter">' + numberCalc(data.fanscount) + '</a> 粉丝</div>' +
+				'<span class="line"></span>' +
+				'<div class="user-item"><a href="/new_web/html/usercenter.html" class="counter">' + snscount + '</a> 内容</div>' +
+				'</div></div>';
+		}
+		box.innerHTML = html;
+		if(addtype == 1) {
+			return box;
+		}
+	}
+	this.fansList = function(data) {
+		if(data) {
+			var box = document.getElementById("fansBox");
+			var l = data.length;
+			for(var i = 0; i < l; i++) {
+				if(data[i].name == null || data[i].image == null) continue;
+				var iDiv = creatClassDom('div', 'item clearfix');
+				var userA = creatClassDom('a', 'user-logo fl', {
+					'href': '/new_web/html/userlook.html?lookat=' + data[i].id,
+					'target': '_blank'
+				});
+				var userLogo = Od.ImageUrl({
+					isHeadPic: true,
+					returnHtml: false,
+					type: 1,
+					w: 90,
+					h: 90,
+					gravity: 'Center',
+					hash: data[i].image.url
+				});
+				userA.appendChild(userLogo);
+				var infoDiv = creatClassDom('div', 'user-info fl');
+				infoDiv.innerHTML = '<a href="/new_web/html/userlook.html?lookat=' + data[i].id + '" class="name" target="_blank">' + data[i].name +
+					(data[i].isauthenticated == 1 ? '<i class="lsjbg lsjbg-vip"></i>' : '') + '</a>' +
+					'<a href="javascript:;" class="signature">' + getSignature(data[i]) + '</a>';
+				var statusDiv = creatClassDom('div', 'status fr');
+				var tickA = creatClassDom('a', 'btn btn-default', {
+					'href': 'javascript:;',
+					'isfollow': data[i].isfollow // 0.未关注 1.已关注 2.双向好友
+				});
+				tickA.innerHTML = commonFollowText(data[i].isfollow);
+				(function(i) {
+					tickA.onclick = function() {
+						var _this = this;
+						var fstatus = _this.getAttribute('isfollow');
+						commonFollow(_this, data[i].id, fstatus);
+					};
+				})(i);
+				//				if(isLogin) {
+				statusDiv.appendChild(tickA);
+				//				}
+				iDiv.appendChild(userA);
+				iDiv.appendChild(infoDiv);
+				iDiv.appendChild(statusDiv);
+				box.appendChild(iDiv);
+			}
+		}
+	}
+	this.blackList = function(data) {
+		if(data) {
+			var box = document.getElementById("blackBox");
+			var l = data.length;
+			for(var i = 0; i < l; i++) {
+				var iDiv = creatClassDom('div', 'item');
+				var userA = creatClassDom('a', 'user-logo', {
+					'href': '/new_web/html/userlook.html?lookat=' + data[i].id,
+					'target': '_blank'
+				});
+				var userLogo = Od.ImageUrl({
+					isHeadPic: true,
+					returnHtml: false,
+					type: 1,
+					w: 60,
+					h: 60,
+					gravity: 'Center',
+					hash: data[i].image.url
+				});
+				userA.appendChild(userLogo);
+				var nameA = creatClassDom('a', 'user-name', {
+					'href': '/new_web/html/userlook.html?lookat=' + data[i].id,
+					'target': '_blank'
+				});
+				nameA.innerHTML = data[i].name;
+				var btnA = creatClassDom('a', 'btn btn-default', {
+					'href': 'javascript:;'
+				});
+				btnA.innerHTML = '移出黑名单';
+				(function(i, iDiv) {
+					btnA.onclick = function(e) {
+						Od.Ajax({
+							method: api.method,
+							url: api.blackUser,
+							data: {
+								'userId': data[i].id,
+								'type': 0
+							},
+							asyc: true,
+							success: function(res) {
+								if(res.code == 1) {
+									Od.Alert({
+										html: '移除成功',
+										target: Od.Target(e),
+										callBack: function() {
+											iDiv.parentNode.removeChild(iDiv);
+										}
+									});
+								}
+							}
+						});
+					}
+				})(i, iDiv)
+				iDiv.appendChild(userA);
+				iDiv.appendChild(nameA);
+				iDiv.appendChild(btnA);
+				box.appendChild(iDiv);
+			}
+		}
+	}
+	this.privateList = function(data) {
+		if(data) {
+			var l = data.length;
+			for(var i = 0; i < l; i++) {
+				var box = document.getElementById("privateBox");
+				var item = creatClassDom('div', 'item clearfix', {
+					'data-userid': data[i].user.id
+				});
+				var userLogo = Od.ImageUrl({
+					isHeadPic: true,
+					returnHtml: true,
+					type: 1,
+					w: 50,
+					h: 50,
+					gravity: 'Center',
+					hash: data[i].user.image.url
+				});
+				var html = '<a href="/new_web/html/userlook.html?lookat=' + data[i].user.id + '" class="user-logo fl" target="_blank">' + userLogo + '</a>' +
+					'<div class="content"><div class="user">' +
+					'<a href="/new_web/html/userlook.html?lookat=' + data[i].user.id + '" class="text-primary" target="_blank" >' + data[i].user.name;
+				if(data[i].user.isauthenticated == 1) {
+					html += '<i class="lsjbg lsjbg-vip"></i>';
+				}
+				html += '</a>';
+				if(data[i].isread == 0) {
+					html += ' <span class="time"> [未读] </span>';
+				}
+				if(data[i].content == '') {
+					var privateText = '图片消息';
+				} else {
+					var privateText = Od.TransText({
+						text: data[i].content,
+						hash: data[i].image.url
+					});
+				}
+				html += '<span class="time fr">' + data[i].time + '</span>' +
+					'</div><p>' + privateText + '</p></div>';
+				item.innerHTML = html;
+				(function(i) {
+					item.onclick = function() {
+						openChat(this, data[i].user.name);
+					}
+				})(i)
+				box.appendChild(item);
+			}
+		}
+	}
+	this.praiseList = function(data) {
+		if(data) {
+			var box = document.getElementById("praiseBox");
+			var l = data.length;
+			for(var i = 0; i < l; i++) {
+				var iDiv = creatClassDom('div', 'item');
+				var userA = creatClassDom('a', 'user-logo fl', {
+					'href': '/new_web/html/userlook.html?lookat=' + data[i].user.id,
+					'target': '_blank'
+				});
+				var userLogo = Od.ImageUrl({
+					isHeadPic: true,
+					returnHtml: false,
+					type: 1,
+					w: 50,
+					h: 50,
+					gravity: 'Center',
+					hash: data[i].user.image.url
+				});
+				userA.appendChild(userLogo);
+				var contDiv = creatClassDom('div', 'content');
+				var userDiv = creatClassDom('div', 'user');
+				userDiv.innerHTML = '<a href="/new_web/html/userlook.html?lookat=' + data[i].user.id + '" class="text-primary" target="_blank">' + data[i].user.name +
+					(data[i].user.isauthenticated == 1 ? '<i class="lsjbg lsj-vip"></i>' : '') + '</a>' +
+					'  <span class="time">' + data[i].time + '</span>';
+				var desP = creatClassDom('p', '');
+				var parentDiv = creatClassDom('a', 'parent', {
+					'target': '_blank'
+				});
+				var parentP = creatClassDom('p', 'parent-content');
+				var ahref = '';
+				if(data[i].resourcetype == 0) {
+					desP.innerHTML = '赞了我的文章';
+					ahref = '/thread/' + data[i].sns.resourceid + '.html';
+					//					parentP.innerHTML = Od.TransText({
+					//						text: data[i].sns.title,
+					//						data: data[i].sns
+					//					});
+					parentP.innerHTML = data[i].sns.title;
+					if(data[i].sns.isflag == 1 || data[i].sns.id == 0) {
+						ahref = 'javascript:;';
+						parentDiv.setAttribute('target', '_self');
+						parentP.innerHTML = '原帖子已被删除';
+					}
+				} else if(data[i].resourcetype == 2) {
+					desP.innerHTML = '赞了我的微文';
+					ahref = '/new_web/html/microessay.html?resourceId=' + data[i].sns.resourceid + '&resourceType=' + data[i].sns.snstype;
+					parentP.innerHTML = data[i].sns.description;
+					//					parentP.innerHTML = Od.TransText({
+					//						text: data[i].sns.description,
+					//						data: data[i].sns
+					//					});
+					if(data[i].sns.isflag == 1 || data[i].sns.id == 0) {
+						ahref = 'javascript:;';
+						parentDiv.setAttribute('target', '_self');
+						parentP.innerHTML = '原微文已被删除';
+					}
+				} else if(data[i].resourcetype == 3) {
+					desP.innerHTML = '赞了我的转发';
+					ahref = '/new_web/html/microessay.html?resourceId=' + data[i].sns.resourceid + '&resourceType=' + data[i].sns.snstype;
+					//					parentP.innerHTML = Od.TransText({
+					//						text: data[i].sns.description,
+					//						data: data[i].sns
+					//					});
+					parentP.innerHTML = data[i].sns.description;
+					if(data[i].sns.isflag == 1 || data[i].sns.id == 0) {
+						ahref = 'javascript:;';
+						parentDiv.setAttribute('target', '_self');
+						parentP.innerHTML = '原转发已被删除';
+					}
+				} else if(data[i].resourcetype == 5) {
+					desP.innerHTML = '赞了我的评论';
+					if(data[i].comment.sns.snstype == 0) {
+						ahref = '/thread/' + data[i].comment.sns.resourceid + '.html';
+					} else {
+						ahref = '/new_web/html/microessay.html?resourceId=' + data[i].comment.sns.resourceid + '&resourceType=' + data[i].comment.sns.snstype;
+					}
+					parentP.innerHTML = data[i].comment.content;
+					//					parentP.innerHTML = Od.TransText({
+					//						text: data[i].comment.content,
+					//						data: data[i].comment
+					//					});
+					if(data[i].comment.isdel == 1 || data[i].comment.id == 0) {
+						ahref = 'javascript:;';
+						parentDiv.setAttribute('target', '_self');
+						parentP.innerHTML = '原评论已被删除';
+					}
+				} else if(data[i].resourcetype == 9 || data[i].resourcetype == 10) {
+					desP.innerHTML = '赞了我的观点';
+					if(data[i].sns.snstype == 9) {
+						ahref = '/thread/' + data[i].sns.resourceid + '.html';
+					} else {
+						ahref = '/new_web/html/userpoint.html.html?resourceId=' + data[i].sns.resourceid + '&resourceType=' + data[i].sns.snstype;
+					}
+					parentP.innerHTML = data[i].sns.description;
+					if(data[i].sns.isflag == 1 || data[i].sns.id == 0) {
+						ahref = 'javascript:;';
+						parentDiv.setAttribute('target', '_self');
+						parentP.innerHTML = '原观点已被删除';
+					}
+				}
+				parentDiv.setAttribute('href', ahref);
+				parentDiv.appendChild(parentP);
+				contDiv.appendChild(userDiv);
+				contDiv.appendChild(desP);
+				contDiv.appendChild(parentDiv);
+				iDiv.appendChild(userA);
+				iDiv.appendChild(contDiv);
+				box.appendChild(iDiv);
+			}
+		}
+	}
+	this.messageList = function(data) {
+		if(data) {
+			var box = document.getElementById("messageBox");
+			var l = data.length;
+			var html = '';
+			for(var i = 0; i < l; i++) {
+				var iDiv = creatClassDom('div', 'item clearfix', {
+					'me-id': data[i].id
+				});
+				iDiv.innerHTML = '<div class="content"><p>' + data[i].data + '</p>' +
+					'<div class="time">' + data[i].time + '</div></div>';
+				box.appendChild(iDiv);
+			}
+		}
+	}
+	this.commentList = function(data, box, comtype) { //1我发出 2我收到
+		if(data) {
+			if(box != undefined && box != '') {
+				var box = document.getElementById(box);
+			} else {
+				var box = document.getElementById("commentBox");
+			}
+			var l = data.length;
+			for(var i = 0; i < l; i++) {
+				if(data[i].isdel == 1 || (data[i].sns.id == 0 && data[i].sns.resourceid == 0)) continue;
+				var iDiv = creatClassDom('div', 'item clearfix');
+				var userA = creatClassDom('a', 'user-logo fl', {
+					'href': '/new_web/html/userlook.html?lookat=' + data[i].user.id,
+					'target': '_blank'
+				});
+				var userLogo = Od.ImageUrl({
+					isHeadPic: true,
+					returnHtml: false,
+					type: 1,
+					w: 50,
+					h: 50,
+					gravity: 'Center',
+					hash: data[i].user.image.url
+				});
+				userA.appendChild(userLogo);
+				var contDiv = creatClassDom('div', 'content');
+				var userDiv = creatClassDom('div', 'user');
+				userDiv.innerHTML = '<a href="/new_web/html/userlook.html?lookat=' + data[i].user.id + '" class="text-primary" target="_blank">' + data[i].user.name +
+					(data[i].user.isauthenticated == 1 ? '<i class="lsjbg lsj-vip"></i>' : '') + '</a>' +
+					'  <span class="time">' + data[i].time + '</span>';
+				var handleDiv = creatClassDom('div', 'handle fr');
+				var replyA = creatClassDom('a', 'text-primary', {
+					'href': 'javascript:;',
+					'data-resourceid': data[i].resourceid,
+					'data-resourcetype': data[i].sns.snstype,
+					'data-toggle': '0'
+				});
+				replyA.innerHTML = '回复';
+				(function(i) {
+					replyA.onclick = function() {
+						var toggle = this.getAttribute('data-toggle');
+						if(toggle == 0) {
+							if(isLogin) {
+								commonInput({
+									target: document.getElementById('comment-box-' + data[i].id),
+									type: 'reply',
+									id: data[i].id,
+									commentId: data[i].id,
+									resourceId: data[i].resourceid,
+									resourceType: data[i].sns.snstype,
+									maxCharCount: 140, //最大字符限制
+									postUrl: '/api/addComment',
+									hideAsycInput: (data[i].snstype == 9 || data[i].snstype == 10 ? true : false),
+									beforeFunc: function() {}, //返回数据前
+									successFunc: function(res) {
+										closeCommonInput('comment-box-' + data[i].id);
+									}, //发布成功
+									failFunc: function() {} //发布失败
+								});
+							}
+						} else {
+							closeCommonInput('comment-box-' + data[i].id);
+						}
+						this.setAttribute('data-toggle', 1 - toggle);
+					};
+				})(i);
+
+				var lineSpan = creatClassDom('span', 'line');
+				var deleteA = creatClassDom('a', 'text-danger delete', {
+					'href': 'javascript:;'
+				});
+				deleteA.innerHTML = '举报';
+				(function(i) {
+					deleteA.onclick = function() {
+						showReport(2, data[i].user.id, data[i].id);
+					}
+				})(i);
+				var desP = creatClassDom('p', '');
+				desP.innerHTML = Od.TransText({
+					text: data[i].content,
+					data: data[i]
+				});
+				var parentDiv = creatClassDom('div', 'parent');
+				var parentHtml = '';
+				var ahref = '';
+				if(data[i].iscomment == 0 && attype != 2) {
+					parentHtml = '回复了我的评论:' + Od.TransText({
+						text: data[i].parent.content
+					});
+					if(data[i].parent.sns.snstype == 0) {
+						ahref = '/thread/' + data[i].sns.resourceid + '.html';
+					} else {
+						ahref = '/new_web/html/microessay.html?resourceId=' + data[i].parent.sns.resourceid + '&resourceType=' + data[i].parent.sns.snstype;
+					}
+				} else {
+					var userName = '我';
+					if(comtype == 1) {
+						userName = data[i].sns.user.name;
+					}
+					if(data[i].sns.id == 0) continue;
+					if(data[i].sns.snstype == 2) {
+						parentHtml = '评论了' + userName + '的微文:' + Od.TransText({
+							text: data[i].sns.description
+						});
+						ahref = '/new_web/html/microessay.html?resourceId=' + data[i].sns.resourceid + '&resourceType=' + data[i].sns.snstype;
+					} else if(data[i].sns.snstype == 3) {
+						parentHtml = '评论了' + userName + '的转发:' + Od.TransText({
+							text: data[i].sns.description
+						});
+						ahref = '/new_web/html/microessay.html?resourceId=' + data[i].sns.resourceid + '&resourceType=' + data[i].sns.snstype + '&type=forward';
+					} else if(data[i].sns.snstype == 0) {
+						parentHtml = '评论了' + userName + '的帖子:' + Od.TransText({
+							text: data[i].sns.title
+						});
+						ahref = '/thread/' + data[i].sns.resourceid + '.html';
+					} else if(data[i].sns.snstype == 9 || data[i].sns.snstype == 10) {
+						parentHtml = '评论了' + userName + '的观点:' + Od.TransText({
+							text: data[i].sns.title
+						});
+						if(data[i].sns.snstype == 9) {
+							ahref = '/thread/' + data[i].sns.resourceid + '.html';
+						} else {
+							ahref = '/new_web/html/userpoint.html?resourceId=' + data[i].sns.resourceid + '&resourceType=' + data[i].sns.snstype + '&type=forward';
+						}
+					}
+				}
+				var commentDiv = creatClassDom('div', 'comment-box', {
+					'id': 'comment-box-' + data[i].id
+				});
+				parentDiv.innerHTML = '<a href="' + ahref + '" class="parent-content" target="_blank">' + parentHtml + '</a>';
+				handleDiv.appendChild(replyA);
+				handleDiv.appendChild(lineSpan);
+				handleDiv.appendChild(deleteA);
+				userDiv.appendChild(handleDiv);
+				contDiv.appendChild(userDiv);
+				contDiv.appendChild(desP);
+				contDiv.appendChild(parentDiv);
+				contDiv.appendChild(commentDiv);
+				iDiv.appendChild(userA);
+				iDiv.appendChild(contDiv);
+				box.appendChild(iDiv);
+			}
+		}
+	}
+}
+//最终页
+function D_Details() {
+	this.snsId = 0;
+	this.userInfo = function(data, ismy, isfollow, type) {
+		var box = document.getElementById("userInfo");
+		var userLogo = Od.ImageUrl({
+			isHeadPic: true,
+			returnHtml: true,
+			type: 1,
+			w: 140,
+			h: 140,
+			gravity: 'Center',
+			hash: data.image.url
+		});
+		var snscount = getSnsCount(data);
+		var html = '<div class="user-logo"><a href="/new_web/html/userlook.html?lookat=' + data.id + '" target="_blank" class="user-logoa">' + userLogo + '</a>';
+		if(data.isauthenticated == 1) {
+			html += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip-3x"></i></a>';
+		}
+		html += '</div><div class="user-name"><a href="#">' + data.name + '</a>';
+		if(data.sex == 1) {
+			html += ' <i class="lsjbg lsjbg-male"></i></div>';
+		} else {
+			html += ' <i class="lsjbg lsjbg-female"></i></div>';
+		}
+		html += '</div><div class="signature">' + getSignature(data) + '</div><div class="user-count clearfix">' +
+			'<a href="javascript:;"><b>' + numberCalc(data.followcount) + '</b><br/>关注</a>' +
+			'<a href="javascript:;"><b>' + numberCalc(data.fanscount) + '</b><br/>粉丝</a>' +
+			'<a href="javascript:;"><b>' + snscount + '</b><br/>文章</a>' +
+			'</div>';
+		//			'<a href="#">文章：' + snscount + '</a><a href="#">关注：' + numberCalc(data.followcount) +
+		//			'</a><a href="#">粉丝：' + numberCalc(data.fanscount) + '</a></div>';
+		box.innerHTML = html;
+		if(ismy == 0) { //&& isLogin
+			var handleDiv = creatClassDom('div', 'user-handle');
+			var attenDiv = creatClassDom('div', 'btn btn-gray atten');
+			var followA = creatClassDom('a', 'btn-gray', {
+				'href': 'javascript:;',
+				'isfollow': isfollow
+			});
+			var followSpan = creatClassDom('span', '');
+			followSpan.innerHTML = commonFollowText(isfollow, 2);
+			var followLine = creatClassDom('span', 'line');
+			followLine.innerHTML = '|';
+			var followEm = creatClassDom('em', 'triangle');
+			followA.appendChild(followSpan);
+			followA.appendChild(followLine);
+			followA.appendChild(followEm);
+			followA.onclick = function() {
+				var _this = this;
+				var fstatus = _this.getAttribute('isfollow');
+				commonFollow(followSpan, data.id, fstatus, 2);
+			}
+			attenDiv.appendChild(followA);
+			var attenUl = creatClassDom('ul', 'atten-actions');
+			var attenLi = creatClassDom('li', '');
+			var reportA = creatClassDom('a', '', {
+				'href': 'javascript:;'
+			});
+			reportA.innerHTML = '举报用户';
+			reportA.onclick = function() {
+				showReport(4, data.id, data.id);
+			};
+			attenUl.appendChild(attenLi).appendChild(reportA);
+			var attenLi = creatClassDom('li', '');
+			var blackA = creatClassDom('a', '', {
+				'href': 'javascript:;'
+			});
+			blackA.innerHTML = '加入黑名单';
+			blackA.onclick = function(e) {
+				Od.Alert({
+					html: '确定要将此用户加入黑名单？',
+					cancelBtn: true,
+					target: Od.Target(e),
+					callBack: function() {
+						Od.Ajax({
+							method: api.method,
+							url: api.blackUser,
+							data: {
+								'userId': data.id,
+								'type': 1
+							},
+							asyc: true,
+							success: function(res) {
+								if(res.code == 1) {
+									Od.Alert({
+										html: '操作成功，该用户已被您加入黑名单。',
+										target: Od.Target(e),
+										callBack: function() {
+											blackA.parentNode.removeChild(blackA);
+										}
+									});
+								}
+							}
+						});
+					}
+				});
+			};
+			handleDiv.appendChild(attenDiv).appendChild(attenUl).appendChild(attenLi).appendChild(blackA);
+			var privateA = creatClassDom('a', 'btn btn-gray', {
+				'href': 'javascript:;',
+				'data-userid': data.id
+			});
+			privateA.innerHTML = '发私信';
+			privateA.onclick = function() {
+				openChat(this, data.name);
+			}
+			handleDiv.appendChild(privateA);
+			box.appendChild(handleDiv);
+		}
+	}
+	this.commentContent = function(data, level) { //level 1一级评论  2二级评论
+		if(data.sns != null) {
+			this.snsId = data.sns.id;
+		}
+		var contDiv = creatClassDom('div', 'content');
+		var subDiv = creatClassDom('div', 'cont-sub');
+		var subContent = data.content;
+		if(level == 1) { //一级评论展示图片二次处理文本
+			if((data.image != null && data.image != undefined && data.image.hash != '') || (data.imagecomment != null && data.imagecomment.hash != '')) {
+				var cReg = new RegExp('\\[http\://15feng\.cn/p/' + (data.imagecomment != null ? data.imagecomment.hash : data.image.hash) + '\\]', 'g');
+				subContent = subContent.replace(cReg, '');
+			}
+		}
+		// var subHtml = '<a href="/new_web/html/userlook.html?lookat=' + data.user.id + '" class="text-primary" target="_blank">' + data.user.name + '</a>';
+		// //二级回复展示人名
+		// if(data.replyuser != undefined && data.replyuser != null) {
+		// 	subHtml += '回复<a href="/new_web/html/userlook.html?lookat=' + data.replyuser.id + '" class="text-primary" target="_blank">' + data.replyuser.name + '</a>'
+		// }
+		var subHtml = Od.TransText({
+			text: subContent,
+			data: data
+		});
+		subDiv.innerHTML = subHtml;
+		var footDiv = creatClassDom('div', 'cont-footer clearfix');
+		var footLeft = creatClassDom('div', 'fl');
+		var leftHtml = '<a href="/new_web/html/userlook.html?lookat=' + data.user.id + '" class="text-primary" target="_blank">' + data.user.name + '</a>';
+		if(data.user.isauthenticated == 1) {
+			leftHtml += '<a href="javascript:;" class="vip"><i class="lsjbg lsjbg-vip"></i></a>';
+		}
+		if(data.level == 1 && data.isreply == 0) {
+			leftHtml += '<i class="lsjbg lsjbg-sofa"></i>';
+		}
+		//二级回复展示人名
+		if(data.replyuser != undefined && data.replyuser != null) {
+			leftHtml += '回复<a href="/new_web/html/userlook.html?lookat=' + data.replyuser.id + '" class="text-primary" target="_blank">' + data.replyuser.name + '</a>'
+		}
+		footLeft.innerHTML = leftHtml;
+		// footLeft.innerHTML = data.time;
+		var footRight = creatClassDom('div', 'handle clearfix fr');
+		//<a id="comment-btn-137273" data-id="121901" data-resourcetype="2" data-resourceid="137273" href="javascript:;">评论和转发共用</a>   
+		var snstype = (data.snstype == undefined ? (data.resourcetype == undefined ? data.sns.snstype : data.resourcetype) : data.snstype);
+		var replyA = creatClassDom('a', 'handle-reply', {
+			'href': 'javascript:;',
+			'id': 'comment-btn-' + data.id,
+			'data-id': this.snsId,
+			'data-resourceid': data.resourceid,
+			'data-resourcetype': snstype,
+			'data-toggle': '0'
+		});
+		replyA.innerHTML = '回复';
+		replyA.onclick = function() {
+			var that = this;
+			var toggle = that.getAttribute('data-toggle');
+			that.setAttribute('data-toggle', 1 - toggle);
+			if(toggle == 0) {
+				if(!isLogin) {
+					window.location.href = '/login?isfrom=1';
+					return false;
+				}
+				commonInput({
+					target: document.getElementById('comment-box-' + data.id),
+					type: 'reply',
+					id: data.id,
+					commentId: data.id,
+					resourceId: data.resourceid,
+					resourceType: snstype,
+					maxCharCount: 140,
+					postUrl: '/api/addComment',
+					hideAsycInput: (snstype == 9 || snstype == 10 ? true : false),
+					beforeFunc: function() {},
+					successFunc: function(res) {
+						var commBox = document.getElementById(data.id);
+						var resarr = new Array();
+						resarr.push(res.body.comment);
+						if(commBox == null) { //三级回复
+							var secComment = document.getElementById("comment-cont-" + resarr[0].originparentid);
+							var replyList = secComment.querySelector('.reply-list');
+							d_Details.commentreply(replyList, resarr, 2);
+						} else {
+							if(commBox.querySelector('.cont-reply') != null) { //二级回复无三级
+								var listbox = commBox.querySelector('.reply-list');
+								d_Details.commentreply(listbox, resarr, 2);
+							} else { //二级回复有三级
+								var replyList = creatClassDom('div', 'reply-list');
+								d_Details.commentreply(replyList, resarr);
+								replyDiv.appendChild(replyList);
+								contDiv.appendChild(replyDiv);
+							}
+						}
+						closeCommonInput('comment-box-' + data.id);
+						that.setAttribute('data-toggle', 0);
+					},
+					failFunc: function() {}
+				});
+			} else {
+				closeCommonInput('comment-box-' + data.id);
+			}
+		}
+		var lineSpan = creatClassDom('span', 'line');
+		var praiseA = creatClassDom('a', 'counter', {
+			'href': 'javascript:;',
+			'rel': 'like'
+		});
+		var praisecount = (data.top == 0 ? 0 : data.top);
+		if(data.istop == 1) {
+			praiseA.className = 'counter like liked';
+			praiseA.setAttribute('rel', 'unlike');
+			if(data.praisecount == 0) {
+				praisecount = 1;
+			}
+		}
+		praiseA.innerHTML = '<i class="icon icon-praise"></i> <span>' + praisecount + '</span>';
+		praiseA.onclick = function(e) {
+			if(data.istop == 1 || praiseA.className == 'counter like likeAn') {
+				Od.Alert({
+					html: '已经赞过',
+					cancelBtn: false,
+					target: Od.Target(e),
+					callBack: function() {}
+				});
+			} else {
+				togglePraise(data, this, 5);
+			}
+		}
+		var commentDiv = creatClassDom('div', 'comment-inputbox', {
+			'id': 'comment-box-' + data.id
+		})
+		//		if(isLogin) {
+		footRight.appendChild(replyA);
+		footRight.appendChild(lineSpan);
+		//		}
+		footRight.appendChild(praiseA);
+		footDiv.appendChild(footLeft);
+		footDiv.appendChild(footRight);
+		contDiv.appendChild(footDiv);
+		contDiv.appendChild(subDiv);
+		if(level == 1) { //一级评论展示图片
+			if((data.image != null && data.image != undefined && data.image.hash != '') || (data.imagecomment != null && data.imagecomment.hash != '')) {
+				//				subDiv.innerHTML = '<a href="/new_web/html/userlook.html?lookat=' + data.user.id + '" class="text-primary" target="_blank">' + data.user.name + '</a>：图片评论';
+				var imgDiv = creatClassDom('div', 'cont-img');
+				if(data.imagecomment != null) {
+					var imgA = creatClassDom('a', '', {
+						'href': 'javascript:;',
+						'w': data.imagecomment.width,
+						'h': data.imagecomment.height,
+						'url': data.imagecomment.url,
+						'hash': data.imagecomment.hash,
+						'mimetype': data.imagecomment.mimetype,
+						'data-type': 'i'
+					});
+					var commentImg = Od.ImageUrl({
+						returnHtml: false,
+						type: 1,
+						w: 100,
+						h: 100,
+						gravity: 'Center',
+						hash: data.imagecomment.url
+					});
+				} else {
+					var imgA = creatClassDom('a', '', {
+						'href': 'javascript:;',
+						'w': data.image.width,
+						'h': data.image.height,
+						'url': data.image.url,
+						'hash': data.image.hash,
+						'mimetype': data.image.mimetype,
+						'data-type': 'i'
+					});
+					var commentImg = Od.ImageUrl({
+						returnHtml: false,
+						type: 1,
+						w: 100,
+						h: 100,
+						gravity: 'Center',
+						hash: data.image.url
+					});
+				}
+				imgA.onclick = function() {
+					Od.OpenMediaView(this);
+				}
+				imgA.appendChild(commentImg);
+				imgDiv.appendChild(imgA);
+				contDiv.appendChild(imgDiv);
+			}
+		}
+		contDiv.appendChild(commentDiv);
+		var replyDiv = creatClassDom('div', 'cont-reply', {
+			'id': 'comment-cont-' + data.id
+		});
+		//如果有二级回复
+		if(data.reply != undefined && data.reply.count > 0 && data.reply.list.length > 0) {
+			var replyList = creatClassDom('div', 'reply-list');
+			this.commentreply(replyList, data.reply.list);
+			replyDiv.appendChild(replyList);
+			if(data.reply.count > 3) {
+				var moreDiv = creatClassDom('div', 'replay-more');
+				var moreA = creatClassDom('a', 'text-primary', {
+					'href': 'javascript:;',
+					'pageNo': '1',
+					'id': 'replay-more-' + data.id
+				});
+				moreA.innerHTML = '共' + data.reply.count + '条回复';
+				moreA.onclick = function() {
+					var _this = this;
+					var page = parseInt(_this.getAttribute('pageNo'));
+					if(page == 1) {
+						replyList.innerHTML = '';
+					}
+					d_Loading.insert('replay-more-' + data.id);
+					Od.Ajax({
+						method: api.method, //方法
+						url: api.commentInfo,
+						data: {
+							'commentId': data.id,
+							'orderId': 2,
+							'pageNo': page,
+							'pageSize': 10
+						},
+						asyc: true, //是否为异步
+						success: function(res) {
+							d_Loading.remove('replay-more-' + data.id);
+							var list = res.body.comment.reply.list;
+							var pagecount = res.body.comment.reply.pagecount;
+							var count = res.body.comment.reply.count;
+							_this.setAttribute('pageNo', page + 1);
+							//							if(page == 1) {
+							//								var num = replyList.querySelectorAll('.reply-item').length;
+							//								list = list.slice(num);
+							//							}
+							d_Details.commentreply(replyList, list);
+							if(parseInt(pagecount) > parseInt(page)) {
+								_this.innerHTML = '还有' + (count - 10 * page) + '条回复';
+							} else {
+								_this.parentNode.className = 'replay-more hide';
+							}
+						}
+					});
+				}
+				moreDiv.appendChild(moreA);
+				replyDiv.appendChild(moreDiv);
+			}
+			contDiv.appendChild(replyDiv);
+		}
+		return contDiv;
+	}
+	this.commentList = function(id, data, type) { //type 1或空是加载  2添加
+		var box = document.getElementById('msgBox' + id);
+		if(type == 2) {
+			var arr = new Array();
+			arr.push(data)
+			data = arr;
+		}
+		var l = data.length;
+		for(var i = 0; i < l; i++) {
+			if(data[i].isdel == 1) continue;
+			if(snslisttype == 5 || snslisttype == 6 || snslisttype == 9 || snslisttype == 10) {
+				if(!listUnique(data[i])) continue;
+			}
+			var userImg = Od.ImageUrl({
+				isHeadPic: false,
+				returnHtml: false,
+				type: 1,
+				w: 40,
+				h: 40,
+				gravity: 'Center',
+				hash: data[i].user.image.url
+			});
+			var oDiv = creatClassDom('div', 'item', {
+				'data-id': data[i].id,
+				'id': data[i].id
+			});
+			var userLogo = creatClassDom('a', 'user-logo fl', {
+				'href': '/new_web/html/userlook.html?lookat=' + data[i].user.id,
+				'target': '_blank'
+			});
+			userLogo.appendChild(userImg);
+			var contDiv = this.commentContent(data[i], 1);
+			oDiv.appendChild(userLogo);
+			oDiv.appendChild(contDiv);
+			if(type == 2) {
+				var noP = box.querySelector('.nothing');
+				if(noP) {
+					noP.parentNode.removeChild(noP);
+				}
+				box.insertBefore(oDiv, box.childNodes[0]);
+			} else {
+				box.appendChild(oDiv);
+			}
+
+		}
+	}
+	this.commentreply = function(box, data, type) { //type 1或空是加载  2添加
+		var l = data.length;
+		for(var i = 0; i < l; i++) {
+			var itemDiv = creatClassDom('div', 'reply-item');
+			var contDiv = this.commentContent(data[i], 2);
+			itemDiv.appendChild(contDiv);
+			if(type == 2) {
+				box.insertBefore(itemDiv, box.childNodes[0]);
+			} else {
+				box.appendChild(itemDiv);
+			}
+		}
+	}
+	this.forwardList = function(box, res, type) { //type 1or无是列表  2追加
+		var l = res.length;
+		for(var i = 0; i < l; i++) {
+			var itemDiv = creatClassDom('div', 'item');
+			var userLogoA = creatClassDom('a', 'user-logo fl', {
+				'href': '/new_web/html/userlook.html?lookat=' + res[i].user.id,
+				'target': '_blank'
+			});
+			var userImg = Od.ImageUrl({
+				isHeadPic: true,
+				returnHtml: false,
+				type: 1,
+				w: 40,
+				h: 40,
+				gravity: 'Center',
+				hash: res[i].user.image.url
+			});
+			userLogoA.appendChild(userImg);
+			var itemContDiv = creatClassDom('div', 'content');
+			var itemSubDiv = creatClassDom('div', 'cont-sub');
+			itemSubDiv.innerHTML = '<a href="/new_web/html/userlook.html?lookat=' + res[i].user.id + '" target="_blank" class="text-primary">' + res[i].user.name + '</a>：' + Od.TransText({
+				text: res[i].description,
+				data: res[i]
+			});
+			var itemFootDiv = creatClassDom('div', 'cont-footer clearfix');
+			var footFlSpan = creatClassDom('span', 'time fl');
+			footFlSpan.innerHTML = res[i].createtime;
+			var footFrDiv = creatClassDom('div', 'handle clearfix fr');
+			var footForwardA = creatClassDom('a', 'handle-replay', {
+				'href': 'javascript:;'
+			});
+			footForwardA.innerHTML = '转发 ' + res[i].forward;
+			var isLayer = document.getElementById('forwardText') == null ? false : true; //是否为转发浮层
+			(function(i) {
+				footForwardA.onclick = function() {
+					if(!isLogin) {
+						window.location.href = '/login?isfrom=1';
+						return false;
+					}
+					commonInput({
+						target: (isLayer ? document.getElementById('forwardText') : document.getElementById('msgText')),
+						type: 'reshare',
+						id: res[i].id,
+						originalId: res[i].original.id,
+						description: ('//@' + res[i].user.name + ':' + res[i].description),
+						maxCharCount: 140,
+						postUrl: '/api/retweet',
+						hideAsycInput: (res[i].snstype == 9 || res[i].snstype == 10 ? true : false),
+						defaultText: (res[i].snstype == 0 ? '转发文章' : ''),
+						beforeFunc: function() {},
+						successFunc: function(res) {
+							var forBox = (isLayer ? document.getElementById('forwardList') : document.querySelector('.msg-box'));
+							var resarr = new Array();
+							resarr.push(res.body.sns);
+							d_Details.forwardList(forBox, resarr, 2);
+							if(isLayer) closeFowardInput('forward-window');
+						},
+						failFunc: function() {}
+					});
+				}
+			})(i);
+
+			var footLineSpan = creatClassDom('span', 'line');
+			var footPraiseA = creatClassDom('a', 'counter', {
+				'href': 'javascript:;',
+				'rel': 'like'
+			});
+			var praisecount = (res[i].praisecount == 0 ? 0 : res[i].praisecount);
+			if(res[i].ispraise == 1) {
+				footPraiseA.className = 'counter like liked';
+				footPraiseA.setAttribute('rel', 'unlike');
+				if(res[i].praisecount == 0) {
+					praisecount = 1;
+				}
+			}
+			footPraiseA.innerHTML = '<i class="icon icon-praise"></i> <span>' + praisecount + '</span>';
+			(function(i) {
+				footPraiseA.onclick = function() {
+					togglePraise(res[i], this, 4);
+				}
+			})(i);
+			footFrDiv.appendChild(footForwardA);
+			footFrDiv.appendChild(footLineSpan);
+			footFrDiv.appendChild(footPraiseA);
+			itemFootDiv.appendChild(footFlSpan);
+			itemFootDiv.appendChild(footFrDiv);
+			itemContDiv.appendChild(itemSubDiv);
+			itemContDiv.appendChild(itemFootDiv);
+			itemDiv.appendChild(userLogoA);
+			itemDiv.appendChild(itemContDiv);
+			if(type == 2) {
+				box.insertBefore(itemDiv, box.childNodes[0]);
+			} else {
+				box.appendChild(itemDiv);
+			}
+		}
+	}
+	this.praiseList = function(res, num) {
+		var box = document.querySelector('.msg-box');
+		var l = res.length;
+		for(var i = 0; i < l; i++) {
+			var itemDiv = creatClassDom('div', 'item');
+			if((i + 1) % num == 0) {
+				itemDiv.className = 'item mr0';
+			}
+			var userLogo = Od.ImageUrl({
+				isHeadPic: true,
+				returnHtml: false,
+				type: 1,
+				w: 40,
+				h: 40,
+				gravity: 'Center',
+				hash: res[i].user.image.url
+			});
+			var userA = creatClassDom('a', '', {
+				'href': '/new_web/html/userlook.html?lookat=' + res[i].user.id,
+				'target': '_blank'
+			})
+			userA.appendChild(userLogo);
+			itemDiv.appendChild(userA);
+			box.appendChild(itemDiv);
+		}
+	}
+}
+//热门节目
+function D_HotShow() {
+	this.showList = function(data) {
+		if(data) {
+			var box = document.getElementById("hotShowBox");
+			var l = data.length;
+			for(var i = 0; i < l; i++) {
+				var iDiv = creatClassDom('div', ('item ' + ((i + 1) % 3 == 0 ? 'nomar' : '')));
+				var linkA = creatClassDom('a', 'item-link', {
+					'href': '/new_web/html/hotshow_details.html?id=' + data[i].id,
+					'target': '_blank'
+				});
+				var coverImg = Od.ImageUrl({
+					returnHtml: true,
+					type: 1,
+					w: 210,
+					h: 118,
+					gravity: 'Center',
+					hash: data[i].image.url
+				});
+				linkA.innerHTML = coverImg + '<h3>' + data[i].name + '</h3>' +
+					'<p>' + data[i].title + '</p><p class="time">阅读 ' + numberCalc(data[i].clickcount) + '</p>';
+				box.appendChild(iDiv).appendChild(linkA);
+			}
+		}
+	}
+	this.showDetails = function(data) {
+		var headDiv = document.getElementById("hotHeaderBox");
+		// var titleDiv = creatClassDom('div', 'hot-title clearfix');
+		// titleDiv.innerHTML = '<div class="fl"><h2>' + data.name + '</h2>' +
+		// 	'<p>阅读 ' + numberCalc(data.clickcount) + '</p></div>' +
+		// 	'<a href="/new_web/html/hotshow.html" class="fr text-primary">返回节目列表</a>';
+		// headDiv.appendChild(titleDiv);
+		var coverDiv = creatClassDom('div', 'hot-cover');
+		var coverImg = Od.ImageUrl({
+			returnHtml: false,
+			type: 1,
+			w: 710,
+			h: 400,
+			gravity: 'Center',
+			hash: data.image.url
+		});
+		headDiv.appendChild(coverDiv).appendChild(coverImg);
+		//		var peopleDiv = creatClassDom('div', 'hot-people');
+		//		peopleDiv.innerHTML = '<h5>节目相关人</h5>';
+		//		var slideDiv = creatClassDom('div', 'slide clearfix');
+		//		var slideBoxDiv = creatClassDom('div', 'slide-box fl');
+		//		var slideItemDiv = creatClassDom('div', 'slide-item clearfix');
+		//		var slideHtml = '';
+		//		var userList = data.userlist;
+		//		var l = userList.length;
+		//		for(var i = 0; i < l; i++) {
+		//			var userImg = Od.ImageUrl({
+		//				isHeadPic: true,
+		//				returnHtml: true,
+		//				type: 1,
+		//				w: 70,
+		//				h: 70,
+		//				gravity: 'Center',
+		//				hash: userList[i].image.url
+		//			});
+		//			slideHtml += '<a href="/new_web/html/userlook.html?lookat=' + userList[i].id + '" class="item" target="_blank">' + userImg + '<div class="name">' + userList[i].name +
+		//				(userList[i].isauthenticated == 1 ? '<i class="lsjbg lsj-vip"></i>' : '') + '</div></a>';
+		//		}
+		//		slideItemDiv.innerHTML = slideHtml;
+		//		slideBoxDiv.appendChild(slideItemDiv);
+		//		var slideBtnDiv = creatClassDom('div', 'slide-btn fr');
+		//		var btnA = creatClassDom('a', '', {
+		//			'href': 'javascript:;',
+		//			'num': '0'
+		//		});
+		//		btnA.innerHTML = '<i class="icon icon-right"></i>';
+		//		btnA.onclick = function() {
+		//			var num = btnA.getAttribute('num');
+		//			num++;
+		//			if(num > l / 6) {
+		//				num = 0;
+		//			}
+		//			slideItemDiv.style.transform = 'translateX(-' + 540 * num + 'px)';
+		//			btnA.setAttribute('num', num);
+		//
+		//		}
+		//		slideBtnDiv.appendChild(btnA);
+		//		slideDiv.appendChild(slideBoxDiv);
+		//		slideDiv.appendChild(slideBtnDiv);
+		//		peopleDiv.appendChild(slideDiv);
+		//		headDiv.appendChild(peopleDiv);
+	}
+}
+//占位
+function D_Aside(box) {
+	this.setUpList = function(data, type) { //type 1热门  2草稿  3收藏 4相关用户
+		var l = data.length;
+		var aDiv = creatClassDom('div', 'aside-sns hot-sns');
+		var h4 = creatClassDom('h4', '');
+		if(type == 1) {
+			h4.innerHTML = '24小时热门';
+		} else if(type == 2) {
+			h4.innerHTML = '我的草稿';
+		} else if(type == 3) {
+			h4.innerHTML = '我的收藏';
+		} else if(type == 4) {
+			h4.innerHTML = '相关用户';
+			aDiv.className = 'aside-sns related-user'
+			if(l >= 4) {
+				var keyword = getQueryString('keyword');
+				var moreA = creatClassDom('a', 'fr small', {
+					'href': '/new_web/html/search.html?keyword=' + keyword + '&type=user'
+				});
+				moreA.innerHTML = '更多';
+				h4.appendChild(moreA);
+			}
+		}
+		aDiv.appendChild(h4);
+		var hDiv = creatClassDom('div', 'aside-hot-list');
+		var sDiv = creatClassDom('div', 'aside-hot-sc');
+		if(l > 0) {
+			for(var i = 0; i < l; i++) {
+				if(type != 2 && data[i].id == 0) continue;
+				var iDiv = creatClassDom('div', 'item');
+				var coverImg = Od.ImageUrl({
+					returnHtml: true,
+					type: 1,
+					w: (type == 4 ? 40 : 70),
+					h: (type == 4 ? 40 : 39),
+					gravity: 'Center',
+					hash: (type == 1 ? data[i].imageInfo.defaultImageurl : ((data[i].image == null || data[i].image.url == undefined) ? '' : data[i].image.url))
+				});
+				if(type == 1) {
+					var ahref = '/thread/' + data[i].id + '.html';
+				} else if(type == 2) {
+					var ahref = '/thread/update?id=' + data[i].resourceid + '&isDraft=-1';
+				} else if(type == 3) {
+					if(data[i].snstype == 0) {
+						var ahref = '/thread/' + data[i].resourceid + '.html';
+					} else {
+						var ahref = '/new_web/html/microessay.html?resourceId=' + data[i].resourceid + '&resourceType=' + data[i].snstype;
+					}
+				} else if(type == 4) {
+					var ahref = '/new_web/html/userlook.html?lookat=' + data[i].id;
+				}
+				var contA = creatClassDom('a', 'content', {
+					'target': '_blank',
+					'href': ahref
+				});
+				var contDiv = creatClassDom('div', 'content-box');
+				if(type == 1) {
+					var title = Od.TransText({
+						text: data[i].title,
+						data: data[i],
+						lookAtAllUrl: '/new_web/html/microessay.html?resourceId=' + data[i].resourceid + '&resourceType=' + data[i].snstype
+					});
+					var title = data[i].title;
+				} else if(type == 2) {
+					var title = data[i].title;
+				} else if(type == 3) {
+					var title = (data[i].snstype == 0 ? data[i].title : data[i].description);
+					title = Od.TransText({
+						text: title,
+						data: data[i],
+						lookAtAllUrl: '/new_web/html/microessay.html?resourceId=' + data[i].resourceid + '&resourceType=' + data[i].snstype
+					});
+				}
+				var html = '<div class="c-img fl">' + coverImg +
+					'</div><div class="info fr"><div class="info-box">';
+				if(type == 4) {
+					if(data[i].isauthenticated == 1) {
+						html += '<p class="text-default name">' + data[i].name + '<i class="lsjbg lsjbg-vip"></i></p><p>' + data[i].authenticated["1"] + '</p>';
+					} else {
+						html += '<p class="text-default name">' + data[i].name + '</p><p>' + (data[i].signature == '' ? '这家伙很懒，什么都没有留下' : data[i].signature) + '</p>';
+					}
+				} else {
+					html += '<p class="text-default">' + title + '</p>'
+				}
+				html += '</div></div></a>';
+				contDiv.innerHTML = html;
+				contA.appendChild(contDiv);
+				iDiv.appendChild(contA);
+				sDiv.appendChild(iDiv);
+			}
+		} else {
+			var nDiv = creatClassDom('div', 'nothing-box');
+			if(type == 1) {
+				nDiv.innerHTML = '<p class="nothing">还没有任何热门推荐<p>';
+			} else if(type == 2) {
+				nDiv.innerHTML = '<img src="/new_web/static/images/nodraft.png"><p class="nothing">我还没有保存过草稿<p>';
+			} else if(type == 3) {
+				nDiv.innerHTML = '<img src="/new_web/static/images/nocollect.png"><p class="nothing">我还没有收藏过任何内容<p>';
+			} else if(type == 4) {
+				nDiv.innerHTML = '<p class="nothing">还没有任何用户<p>';
+			}
+			sDiv.appendChild(nDiv);
+		}
+		hDiv.appendChild(sDiv);
+		aDiv.appendChild(hDiv);
+		return aDiv;
+	}
+}
+//话题
+function D_Discuss() {
+	this.discussList = function(data, discusstype) {
+		var iW = 130; //每个cars的宽度
+		var iL = 4; //一个slide的cars数量
+		var halfW = 48; //半个cars的宽度
+		var box = document.getElementById("discussListBox");
+		if(data.length == undefined) {
+			var arr = new Array();
+			arr.push(data);
+			data = arr;
+		}
+		var l = data.length;
+		for(var i = 0; i < l; i++) {
+			var iDiv = creatClassDom('div', 'item');
+			var cA = creatClassDom('a', 'cover-img', {
+				'href': '/new_web/html/autodiscuss.html?id=' + data[i].id,
+				'target': '_blank'
+			});
+			if(discusstype != 1) {
+				cA.href = 'javascript:;';
+			}
+			var coverImg = Od.ImageUrl({
+				returnHtml: false,
+				type: 1,
+				w: 668,
+				h: 375,
+				gravity: 'Center',
+				hash: data[i].image.url
+			});
+			cA.appendChild(coverImg);
+			var timeSpan = creatClassDom('span', 'time');
+			timeSpan.innerHTML = data[i].publishtime;
+			var dataSpan = creatClassDom('span', 'datum');
+			dataSpan.innerHTML = '阅读 ' + numberCalc(data[i].totalreadcount) + ' 讨论 ' + numberCalc(data[i].totaldiscusscount);
+			cA.appendChild(timeSpan);
+			cA.appendChild(dataSpan);
+			iDiv.appendChild(cA);
+			var carsData = data[i].cars;
+			var carsLength = carsData.length;
+			var sbDiv = creatClassDom('div', 'slide-box');
+			//			sbDiv.innerHTML = '<span class="triangle"></span>';
+			var sDiv = creatClassDom('div', 'slide clearfix');
+			var salA = creatClassDom('a', 'slide-arrow slide-arrow-left', {
+				'href': 'javascript:;'
+			});
+			var sarA = creatClassDom('a', 'slide-arrow slide-arrow-right', {
+				'href': 'javascript:;'
+			});
+			var swpDiv = creatClassDom('div', 'slide-warpper clearfix', {
+				'num': '0'
+			});
+			var swDiv = creatClassDom('div', 'slide-warp clearfix', {
+				'num': '0'
+			});
+			swDiv.style.width = carsLength * iW + 'px';
+			salA.innerHTML = '<i class="icon icon-left"></i>';
+			sarA.innerHTML = '<i class="icon icon-right"></i>';
+			(function(sarA, salA, swDiv, carsLength) {
+				var num = swDiv.getAttribute('num');
+				sarA.onclick = function() {
+					commonSlide(swDiv, 1, carsLength, iW, iL, num);
+					//					if(num >= Math.floor(carsLength / iL)) return false;
+					//					num++;
+					//					salA.className = 'slide-arrow slide-arrow-left' + (num > 0 ? '' : ' hide');
+					//					if(num >= Math.floor(carsLength / iL)) {
+					//						sarA.className = 'slide-arrow slide-arrow-right hide';
+					//					}
+					//					swDiv.style.transform = 'translateX(-' + (iW * iL * num) + 'px)';
+					//					swDiv.setAttribute('num', num);
+				}
+				salA.onclick = function() {
+					commonSlide(swDiv, -1, carsLength, iW, iL, num);
+					//					if(num == 0) return false;
+					//					num--;
+					//					sarA.className = 'slide-arrow slide-arrow-right' + (num >= Math.floor(carsLength / iL) ? ' hide' : '');
+					//					if(num == 0) {
+					//						//						salA.className = 'slide-arrow slide-arrow-right hide';
+					//						swDiv.style.transform = 'translateX(-' + (iW * iL * num - halfW) + 'px)';
+					//					} else {
+					//					swDiv.style.transform = 'translateX(-' + (iW * iL * num) + 'px)';
+					//					}
+					//					swDiv.setAttribute('num', num);
+				}
+			})(sarA, salA, swDiv, carsLength);
+			if(carsLength > 3) {
+				sarA.className = 'slide-arrow slide-arrow-right';
+			}
+			for(var j = 0; j < carsLength; j++) {
+				var slideA = creatClassDom('a', 'slide-item', {
+					'href': 'javascript:;'
+				});
+				//				var carImg = Od.ImageUrl({
+				//					returnHtml: true,
+				//					type: 1,
+				//					w: 120,
+				//					h: 90,
+				//					gravity: 'Center',
+				//					hash: carsData[j].image.url
+				//				});
+				slideA.innerHTML = '<img src="' + carsData[j].image.url + '" /><span>' + carsData[j].name + '</span>';
+				swDiv.appendChild(slideA);
+			}
+			sDiv.appendChild(salA);
+			sDiv.appendChild(swpDiv).appendChild(swDiv);
+			sDiv.appendChild(sarA);
+			//			iDiv.appendChild(sbDiv).appendChild(sDiv);
+			box.appendChild(iDiv)
+		}
+	}
+}
+//圈子
+function D_Commmunity() {
+	this.hotList = function(data) {
+		var box = document.getElementById("chotList");
+		var l = data.length;
+		for(var i = 0; i < l; i++) {
+			var iDiv = creatClassDom('div', 'item', {
+				'com_id': data[i].id
+			});
+			if((i + 1) % 5 == 0) {
+				iDiv.className = 'item mr0';
+			}
+			var icDiv = creatClassDom('div', 'item-community');
+			var itA = creatClassDom('a', 'item-title-box', {
+				'href': '/new_web/html/community_details.html?id=' + data[i].id,
+				'target': '_blank'
+			});
+			var coverImg = Od.ImageUrl({
+				returnHtml: true,
+				type: 1,
+				w: 100,
+				h: 100,
+				gravity: 'Center',
+				hash: data[i].image.url == undefined ? '' : data[i].image.url
+			});
+			itA.innerHTML = coverImg + '<span class="item-title">' + data[i].name + '</span>';
+			var textP1 = creatClassDom('p', 'item-text');
+			textP1.innerHTML = numberCalc(data[i].fanscount) + '人加入';
+			var textP2 = creatClassDom('p', 'item-text');
+			textP2.innerHTML = numberCalc(data[i].snscount) + '条内容';
+			var btnDiv = creatClassDom('div', 'item-btn attention');
+			var btnA = creatClassDom('a', 'btn btn-gray', {
+				'href': 'javascript:;',
+				'com_id': data[i].id
+			});
+			icDiv.appendChild(itA);
+			btnA.innerHTML = '<i class="icon icon-add"></i> 加入';
+			(function(btnA) {
+				btnA.onclick = function() {
+					if(!isLogin) {
+						window.location.href = '/login?isfrom=1';
+						return false;
+					}
+					var com_id = btnA.getAttribute('com_id');
+					if(btnA.className == 'btn btn-gray') {
+						btnA.className = 'btn btn-gray active';
+						btnA.innerHTML = '<i class="icon icon-tick"></i>';
+						joinArr.push(com_id);
+					} else {
+						btnA.className = 'btn btn-gray';
+						btnA.innerHTML = '<i class="icon icon-add"></i> 加入';
+						var l = joinArr.length;
+						for(var i = 0; i < l; i++) {
+							if(joinArr[i] == com_id) {
+								joinArr.splice(i, 1);
+								break;
+							}
+						}
+					}
+					document.getElementById("addAllCommunityBtn").querySelector('a').className = 'btn btn-gray ' + (joinArr.length == 0 ? 'disabled' : 'active');
+				}
+			})(btnA);
+			btnDiv.appendChild(btnA);
+			iDiv.appendChild(icDiv);
+			iDiv.appendChild(textP1);
+			iDiv.appendChild(textP2);
+			iDiv.appendChild(btnDiv);
+			box.appendChild(iDiv);
+		}
+	};
+	this.communityList = function(data) {
+		var box = document.getElementById("chotList");
+		var l = data.length;
+		for(var i = 0; i < l; i++) {
+			var iDiv = creatClassDom('div', 'item');
+			if((i + 1) % 2 == 0) {
+				iDiv.className = 'item mr0';
+			}
+			var itA = creatClassDom('a', 'table-cell', {
+				'href': '/new_web/html/community_details.html?id=' + data[i].id,
+				'target': '_blank'
+			});
+			var coverImg = Od.ImageUrl({
+				returnHtml: false,
+				type: 1,
+				w: 100,
+				h: 100,
+				gravity: 'Center',
+				hash: data[i].image.url == undefined ? '' : data[i].image.url
+			});
+			itA.appendChild(coverImg);
+			var contDiv = creatClassDom('div', 'table-cell item-content');
+			var h3 = creatClassDom('h3', '');
+			h3.innerHTML = '<a href="/new_web/html/community_details.html?id=' + data[i].id + '" target="_blank">' + data[i].name + (data[i].type == 0 ? ' 圈子' : '') + '</a>';
+			var p = creatClassDom('p', '');
+			p.innerHTML = '<a href="/new_web/html/community_details.html?id=' + data[i].id + '" target="_blank">' + data[i].fanscount + '人加入  ' + data[i].snscount + '条内容</a>'
+			var btnDiv = creatClassDom('div', 'item-btn attention');
+			var btnA = creatClassDom('a', 'btn btn-gray', {
+				'href': 'javascript:;',
+				'data-id': data[i].id
+			});
+			if(data[i].isfans == 1 && isLogin) {
+				btnA.innerHTML = '已加入';
+				var setType = 1;
+			} else {
+				btnA.innerHTML = '<i class="icon icon-add"></i> 加入';
+				var setType = 0;
+			}
+			btnA.setAttribute('data-type', setType);
+			(function(btnA, setType) {
+				btnA.onclick = function() {
+					if(!isLogin) {
+						window.location.href = '/login?isfrom=1';
+						return false;
+					}
+					var btnType = this.getAttribute('data-type');
+					bindCommunityStatus(btnA, btnType);
+				}
+			})(btnA, setType);
+			btnDiv.appendChild(btnA);
+			contDiv.appendChild(h3);
+			contDiv.appendChild(p);
+			contDiv.appendChild(btnDiv);
+			iDiv.appendChild(itA);
+			iDiv.appendChild(contDiv);
+			box.appendChild(iDiv);
+		}
+	};
+	this.slideList = function(data) {
+		var box = document.getElementById("slideList");
+		var l = data.length;
+		box.setAttribute('total', l + 1);
+		box.style.width = (l + 1) * 110 + 'px';
+		if(l >= 5) {
+			document.querySelector('.self-right-btn').className = 'self-right-btn allow'
+		}
+		for(var i = 0; i < l; i++) {
+			var linkA = creatClassDom('a', 'slide-item-link', {
+				'href': '/new_web/html/community_details.html?id=' + data[i].id,
+				'target': '_blank'
+			});
+			var coverImg = Od.ImageUrl({
+				returnHtml: true,
+				type: 1,
+				w: 80,
+				h: 80,
+				gravity: 'Center',
+				hash: data[i].image.url == undefined ? '' : data[i].image.url
+			});
+			linkA.innerHTML = coverImg + '<span>' + data[i].name + (data[i].type == 0 ? ' 圈子' : '') + '</span>';
+			box.appendChild(linkA);
+		}
+		var addA = creatClassDom('a', 'slide-item-add', {
+			'href': '/new_web/html/communitylist.html'
+		});
+		addA.innerHTML = '<i class="lsjbg lsjbg-community-add"></i><span>添加圈子</span>';
+		box.appendChild(addA);
+	}
+}
+//loading
+function D_Loading() {
+	this.created = function() {
+		var lDiv = creatClassDom('div', 'loading');
+		var lImg = document.createElement("img");
+		lImg.src = '/new_web/static/images/loading.gif';
+		lImg.onload = function() {
+			lDiv.appendChild(lImg);
+			loadDiv = lDiv;
+		}
+		lImg.onerror = function(error) {
+			console.log('loading-gif is error');
+		}
+		lDiv.appendChild(lImg);
+		return lDiv;
+	}
+	this.insert = function(box) {
+		var obj = document.getElementById(box);
+		obj.parentNode.insertBefore(loadDiv, obj);
+	}
+	this.remove = function(box) {
+		var obj = document.getElementById(box);
+		var lDiv = obj.parentNode.querySelector('.loading');
+		if(lDiv != null) {
+			obj.parentNode.removeChild(lDiv);
+		}
+	}
+}
+//error
+function D_Error(box) {
+	this.created = function() {
+		var obj = document.getElementById(box);
+		var fDiv = creatClassDom('div', 'fail');
+		var fImg = document.createElement("img");
+		fImg.src = '/new_web/static/images/error.png?t=1';
+		fImg.onload = function() {
+			fDiv.appendChild(fImg);
+			errorDiv = fDiv;
+		}
+		fImg.onerror = function(error) {
+			console.log('error-png is error');
+		}
+		fDiv.appendChild(fImg);
+		return fDiv;
+	}
+	this.insert = function(box) {
+		var obj = document.getElementById(box);
+		obj.parentNode.insertBefore(errorDiv, obj);
+	}
+	this.remove = function(box) {
+		var obj = document.getElementById(box);
+		var fDiv = obj.parentNode.querySelector('.fail');
+		if(fDiv != null) {
+			obj.parentNode.removeChild(fDiv);
+		}
+	}
+}
+var d_Loading = new D_Loading();
+var loadDiv = d_Loading.created();
+var d_Error = new D_Error();
+var errorDiv = d_Error.created();
+var d_Usercenter = new D_Usercenter();
+var d_Details = new D_Details();
+var d_HotShow = new D_HotShow();
+var d_Aside = new D_Aside();
+var d_Discuss = new D_Discuss();
+var d_Commmunity = new D_Commmunity();
