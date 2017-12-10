@@ -6,11 +6,8 @@ class Spider extends Scrapy.Spider {
         super(opts);
     }
 
-    async crawl () {
-        await this.openRequest('/cars/0-0-0-0-0-0-0-0-0-0-0-0-0');
-        while(1) {
-            let response = await this.engine.receiveDownloadResponse(res);
-        }
+    async crawl (url) {
+        super.crawl('/cars/0-0-0-0-0-0-0-0-0-0-0-0-0');
     }
 
     parseHtml (response) {
