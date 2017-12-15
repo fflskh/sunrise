@@ -1,4 +1,4 @@
-//GET /v1/users
+//POST /v1/users
 
 const User = require(_base + 'controllers/User');
 
@@ -29,10 +29,12 @@ class Handler {
 
         this.validateParams(ctx);
         params = this.getParams(ctx);
-
         let user = await userDao.createUser(params);
 
-        ctx.body = user;
+        ctx.body = {
+            userId: 1,
+            name: 'hahah'
+        };
 
         await next();
     }

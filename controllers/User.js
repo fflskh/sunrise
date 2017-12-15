@@ -26,6 +26,15 @@ class User extends Base {
         let userModel = new UserModel(userData);
 
         return await userModel.save();
+        // return await new Promise((resolve, reject) => {
+        //     UserModel.collection.insert([userData, userData], function(error, docs) {
+        //         if(error) {
+        //             return reject(error);
+        //         }
+        //
+        //         return resolve(docs);
+        //     })
+        // })
     }
 
     async getByUserId (userId) {

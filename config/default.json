@@ -21,5 +21,17 @@
       "versionKey": false,
       "timestamps": true
     }
+  },
+  "spider": {
+    "kue": {
+      "priority": "high",
+      "attempts": 3,
+      "backoff": {
+        "enable": true,
+        "delay": 30000,
+        "type":"fixed"
+      },
+      "concurrency": 10
+    }
   }
 }
