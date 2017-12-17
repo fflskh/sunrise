@@ -3,7 +3,7 @@
  */
 const Schema = require('mongoose').Schema;
 
-const bigSeriesSchema = new Schema({
+const FactorySchema = new Schema({
     brandId: {type: Number, desc: '品牌ID'},
     name: {type: String, desc: '大的系列'}
 }, {
@@ -13,4 +13,4 @@ const bigSeriesSchema = new Schema({
     timestamps: _config.get('mongodb.schemaOpts.timestamps') //设置createdAt和updatedAt
 });
 
-module.exports = bigSeriesSchema;
+module.exports = FactorySchema;

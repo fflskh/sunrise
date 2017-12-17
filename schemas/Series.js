@@ -4,7 +4,7 @@
 const Schema = require('mongoose').Schema;
 
 const seriesSchema = new Schema({
-    bigSeriesId: {type: Number, desc:'大分类名称'},
+    factoryId: {type: Number, desc:'大分类名称'},
     name: {type: String, desc: '系列名称'},
     guidancePrice: {
         min: Number,

@@ -7,6 +7,11 @@ class Pipeline {
 
     }
 
+    async saveOne (opts) {
+        let docs = await this.save(opts);
+        return docs[0];
+    }
+
     /**
      *
      * @param opts
@@ -20,23 +25,56 @@ class Pipeline {
         let data = opts.data;
 
         let Model = require(_base + `models/${modelName}`);
-        let model = new Model(data);
 
-        if(Array.isArray(data)) {
-            return data.map(async function(item) {
-                return await model.save(item);
-            });
-            // await new Promise((resovle, reject) => {
-            //     Model.collection.insert(data, function(error, docs) {
-            //         if(error) {
-            //             return reject(error);
-            //         }
-            //         resovle(docs);
-            //     });
-            // })
-        } else {
-            return await model.save(data);
+        if(!Array.isArray(data)) {
+            data = [data];
         }
+
+        return data.map(async function(item) {
+            let model = new Model(item);
+            return await model.save();
+        });
+    }
+
+    /**
+     * 从DB中查询数据
+     * @param opts
+     * @returns {Promise.<void>}
+     */
+    async findOneDoc (opts) {
+        let modelName = opts.modelName;
+        let where = opts.where;
+
+        let docs = await this.findDocs(opts);
+        return docs && docs[0];
+    }
+
+    //TODO， 加入limit, offset等
+    async findDocs (opts) {
+        let modelName = opts.modelName;
+        let where = opts.where;
+
+        let Model = require(_base + `models/${modelName}`);
+
+        return await Model.find(where).exec();
+    }
+
+    async updateOneDoc (opts) {
+        let modelName = opts.modelName;
+        let where = opts.query;
+        let model = opts.model;
+
+        let Model = require(_base + `models/${modelName}`);
+        return await Model.findAndModify(where, model);
+    }
+
+    async updateDocs (opts) {
+        let modelName = opts.modelName;
+        let where = opts.query;
+        let model = opts.model;
+
+        let Model = require(_base + `models/${modelName}`);
+        return await Model.update(where, model, {multi: true});
     }
 }
 

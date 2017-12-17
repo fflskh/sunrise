@@ -4,7 +4,6 @@ class Pipeline extends SuperPipeline {
     constructor() {
         super();
     }
-
 }
 
 module.exports = Pipeline;

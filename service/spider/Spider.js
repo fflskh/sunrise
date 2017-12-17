@@ -8,6 +8,7 @@ class Spider {
     constructor () {
         this.scheduler = new Scheduler();
         this.downloader = new Downloader();
+        this.pipeline = new Pipeline();
     }
 
     async crawl () {
