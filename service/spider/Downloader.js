@@ -22,6 +22,7 @@ class Downloader {
             throw new Error('exceed the max active downloads');
         }
 
+        console.log(`downloading from : %j`, requestOptions);
         let response = await _utils.request(requestOptions);
 
         this.popActive(requestOptions.url);

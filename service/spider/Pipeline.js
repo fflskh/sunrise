@@ -53,15 +53,29 @@ class Pipeline {
     async findDocs (opts) {
         let modelName = opts.modelName;
         let where = opts.where;
+        let limit = opts.limit;
+        let offset = opts.offset;
+        let sort = opts.sort;
 
         let Model = require(_base + `models/${modelName}`);
 
-        return await Model.find(where).exec();
+        let query = Model.find(where);
+        if(limit) {
+            query.limit(limit);
+        }
+        if(offset) {
+            query.offset(offset);
+        }
+        if(sort) {
+            query.sort(sort);
+        }
+
+        return await query.exec();
     }
 
     async updateOneDoc (opts) {
         let modelName = opts.modelName;
-        let where = opts.query;
+        let where = opts.where;
         let model = opts.model;
 
         let Model = require(_base + `models/${modelName}`);
@@ -70,11 +84,20 @@ class Pipeline {
 
     async updateDocs (opts) {
         let modelName = opts.modelName;
-        let where = opts.query;
+        let where = opts.where;
         let model = opts.model;
 
         let Model = require(_base + `models/${modelName}`);
         return await Model.update(where, model, {multi: true});
+    }
+
+    async count (opts) {
+        let modelName = opts.modelName;
+        let where = opts.where;
+
+        let Model = require(_base + `models/${modelName}`);
+
+        return await Model.count(where);
     }
 }
 

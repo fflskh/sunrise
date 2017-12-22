@@ -5,7 +5,7 @@ const Schema = require('mongoose').Schema;
 
 const brandSchema = new Schema({
     name: {type: String, desc: '品牌'},
-    img: {type: String, desc: '品牌图片'},
+    image: {type: Schema.Types.Mixed, desc: '品牌图片'},
     firstChar: {type: String, desc: '首字母'}
 }, {
     collection: 'brands', //默认取model name的负数为collection name，该选项用于手动指定collection name
