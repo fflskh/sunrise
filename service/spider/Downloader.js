@@ -40,7 +40,7 @@ class Downloader {
         if(this.active.length > this.maxActive) {
             throw new Error('exceed the max active downloads');
         }
-        console.log(`downloading from : %j`, requestOptions.url);
+        console.log(`downloading from : %j`, requestOptions);
         let response = await _utils.requestPost(requestOptions);
 
         this.popActive(requestOptions.url);

@@ -77,7 +77,7 @@ class Pipeline {
         let model = opts.model;
 
         let Model = require(_base + `models/${modelName}`);
-        return await Model.findAndModify(where, model);
+        return await Model.update(where, model);
     }
 
     async updateDocs (opts) {

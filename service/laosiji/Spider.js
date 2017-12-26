@@ -26,32 +26,32 @@ class Spider extends SuperSpider {
 
     async crawl () {
         //选车条件和车辆品牌
-        let [conditions, brands] = await Promise.all([
-            this.resolveConditions(),
-            this.resolveBrands()
-        ]);
-
-        await Promise.all([
-            this.pipeline.save({
-                modelName: 'Query',
-                data: conditions
-            }),
-            this.pipeline.save({
-                modelName: 'Brand',
-                data: brands
-            })
-        ]);
-
-        //车系列
-        await this.resolveSeries();
-
-        //每个系列简介
-        await this.resolveSeriesBriefs();
+        // let [conditions, brands] = await Promise.all([
+        //     this.resolveConditions(),
+        //     this.resolveBrands()
+        // ]);
+        //
+        // await Promise.all([
+        //     this.pipeline.save({
+        //         modelName: 'Query',
+        //         data: conditions
+        //     }),
+        //     this.pipeline.save({
+        //         modelName: 'Brand',
+        //         data: brands
+        //     })
+        // ]);
+        //
+        // //车系列
+        // await this.resolveSeries();
+        //
+        // //每个系列简介
+        // await this.resolveSeriesBriefs();
 
         //每个系列对应的配置和图片
         await Promise.all([
             this.resolveSeriesConfigs(),
-            this.resolveSeriesPics()
+            // this.resolveSeriesPics()
         ]);
     }
 
@@ -192,7 +192,7 @@ class Spider extends SuperSpider {
 
                             };
 
-                            console.log('series: ', series);
+                            // console.log('series: ', series);
 
                             await self.pipeline.saveOne({
                                 modelName: 'Series',
@@ -229,7 +229,7 @@ class Spider extends SuperSpider {
                 offset
             });
 
-            console.log('series: ',series);
+            // console.log('series: ',series);
 
             await _utils.parallel(series, parallelCount, this.resolveSingleSeriesBrief.bind(this));
         }
@@ -337,7 +337,7 @@ class Spider extends SuperSpider {
                 offset
             });
 
-            console.log("series: ", series);
+            // console.log("series: ", series);
 
             try {
                 await _utils.parallel(series, parallelCount, this.resolveSingleSeriesPic.bind(this));
@@ -499,6 +499,8 @@ class Spider extends SuperSpider {
                 offset
             });
 
+            // console.log('series: ', series);
+
             try {
                 await _utils.parallel(series, parallelCount, this.resolveSingleSeriesConfig.bind(this));
             } catch(error) {
@@ -510,10 +512,10 @@ class Spider extends SuperSpider {
     async resolveSingleSeriesConfig (brief) {
         let self = this;
         //没有配置，直接pass
-        if(!brief.configUrl) {
-            await self.pipeline.updateDocs({
+        if(!brief.configUrl || !_utils.isUrl(brief.imagesUrl, this.host)) {
+            await self.pipeline.findOneDoc({
                 modelName: 'SeriesBrief',
-                where: {_id: brief.id},
+                where: {_id: brief._id},
                 model: {hasConfigCrawled: true}
             });
 
@@ -524,7 +526,7 @@ class Spider extends SuperSpider {
         let headers = {
             "Host": "www.laosiji.com",
             "Connection": "keep-alive",
-            "Content-Length": "11",
+            "Content-Length": "12",
             "Origin": "http://www.laosiji.com",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36",
             "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
@@ -537,15 +539,30 @@ class Spider extends SuperSpider {
 
         try {
             //直接通过接口爬取，不通过页面爬取
-            let carsid = brief.configUrl.match(/config\/[0-9]{1,}/g)[0].replace('config/', '').replace('/', '');
-            carsid = parseInt(carsid);
-            let configUrl = this.host + '/api/car/carsconfig';
+            let carxid;
+            try {
+                carxid = brief.configUrl.match(/config\/[0-9]{1,}/g)[0].replace('config/', '').replace('/', '');
+                carxid = parseInt(carxid);
+            } catch(error) {
+                //说明config url有问题
+                console.warn(error);
+                await self.pipeline.findOneDoc({
+                    modelName: 'SeriesBrief',
+                    where: {_id: brief._id},
+                    model: {hasConfigCrawled: true}
+                });
+                return null;
+            }
+
+            let configUrl = this.host + '/api/car/carxlistconfig';
+
+            headers["Content-Length"] = `carxid=${carxid}`.length;
 
             let requestOptions = {
                 url: configUrl,
                 headers: headers,
                 method: 'POST',
-                form: {carsid: carsid},
+                form: "carxid="+carxid,
                 timeout: 2*60*1000 //超时时间2min
             };
 
@@ -561,16 +578,23 @@ class Spider extends SuperSpider {
                 try {
                     let configEntity = {};
 
-                    let specName = config.spec_name.split(' ').slice(1).join(' ');
-                    console.log(`specName: `, specName);
+                    let specId = config.spec_id;
+                    let reg = new RegExp(`.*\/${specId}$`);
+                    console.log('reg exp : ', reg);
+
                     let seriesBrief = await self.pipeline.findOneDoc({
                         modelName: 'SeriesBrief',
                         where: {
-                            info: {
-                                $regex: new RegExp(specName)
+                            configUrl: {
+                                $regex: reg
                             }
                         }
                     });
+
+                    if(!seriesBrief) {
+                        console.log(`the regexp ${reg} has no result.`);
+                        return null;
+                    }
 
                     configEntity.seriesBriefId = seriesBrief.id;
                     configEntity.details = {};
@@ -592,7 +616,7 @@ class Spider extends SuperSpider {
 
                     await self.pipeline.updateOneDoc({
                         modelName: 'SeriesBrief',
-                        where: {id: seriesBrief.id},
+                        where: {_id: seriesBrief._id},
                         model: {hasConfigCrawled: true}
                     });
                 } catch(error) {
