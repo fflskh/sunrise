@@ -3,9 +3,7 @@
 */
 
 class Pipeline {
-    constructor () {
-
-    }
+    constructor () {}
 
     async saveOne (opts) {
         let docs = await this.save(opts);
@@ -64,7 +62,7 @@ class Pipeline {
             query.limit(limit);
         }
         if(offset) {
-            query.offset(offset);
+            query.skip(offset);
         }
         if(sort) {
             query.sort(sort);

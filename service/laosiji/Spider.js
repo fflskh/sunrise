@@ -7,6 +7,7 @@ const SuperSpider = require('../spider/Spider');
 class Spider extends SuperSpider {
     constructor() {
         super();
+        this.host = 'http://www.laosiji.com';
     }
 
     getHeaders () {
@@ -24,20 +25,34 @@ class Spider extends SuperSpider {
     }
 
     async crawl () {
-        // let conditions = await this.resolveConditions();
-        // let brands = await this.resolveBrands();
-        // console.log('conditions: ', conditions);
-        // console.log('brands: ', brands);
-        //
-        // await this.saveLineItems('Query', conditions);
-        // await this.saveLineItems('Brand', brands);
+        //选车条件和车辆品牌
+        let [conditions, brands] = await Promise.all([
+            this.resolveConditions(),
+            this.resolveBrands()
+        ]);
 
-        //TODO，是否将爬取数据和保存数据分离
+        await Promise.all([
+            this.pipeline.save({
+                modelName: 'Query',
+                data: conditions
+            }),
+            this.pipeline.save({
+                modelName: 'Brand',
+                data: brands
+            })
+        ]);
+
+        //车系列
         await this.resolveSeries();
 
+        //每个系列简介
         await this.resolveSeriesBriefs();
 
-        await this.resolveSeriesPics();
+        //每个系列对应的配置和图片
+        await Promise.all([
+            this.resolveSeriesConfigs(),
+            this.resolveSeriesPics()
+        ]);
     }
 
     async resolveConditions () {
@@ -105,33 +120,6 @@ class Spider extends SuperSpider {
             console.error(error);
             throw error;
         }
-
-        /*try {
-            let html = await this.downloader.download(requestOptions);
-            let $ = cheerio.load(html);
-
-            let brands = [];
-            $('.cars-side').find('.brand-nav-box > ul > dl').each(function() {
-                let firstChar = $(this).find('dt > a').text();
-                $(this).children('dd').find('a').each(function() {
-                    brands.push({
-                        firstChar: firstChar,
-                        name: $(this).text()
-                    });
-                });
-            });
-
-            //将非空字符替换为一个空格
-            brands.forEach(brand => {
-                brand.firstChar = brand.firstChar.replace(/\s{1,}/g, '');
-                brand.name = brand.name.replace(/\s{1,}/g, ' ');
-            });
-
-            return brands;
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }*/
     }
 
     async resolveSeries () {
@@ -168,7 +156,10 @@ class Spider extends SuperSpider {
 
                     //没有brand，新插入
                     if(!brand) {
-                        let savedBrands = await self.saveLineItems('Brand', [{image:{url: brandImg}, name: brandName}]);
+                        let savedBrands = await self.pipeline.save({
+                            modelName: 'Brand',
+                            data: [{image:{url: brandImg}, name: brandName}]
+                        });
                         brand = savedBrands[0];
                     }
 
@@ -193,7 +184,7 @@ class Spider extends SuperSpider {
                                 factoryId: factory.id,
                                 thumbnail: $(this).find('.img img').attr('data-src'),
                                 name: $(this).find('.name a').text(),
-                                originalLink: 'http://www.laosiji.com' + $(this).find('.img a').attr('href'),
+                                originalLink: self.host + $(this).find('.img a').attr('href'),
                                 guidancePrice: {
                                     min: minPrice,
                                     max: maxPrice
@@ -226,6 +217,7 @@ class Spider extends SuperSpider {
         });
 
         for(let i=0; i<count;) {
+            await _utils.delay(1000);
             let limit = parallelCount;
             let offset = i;
             i += parallelCount;
@@ -237,7 +229,9 @@ class Spider extends SuperSpider {
                 offset
             });
 
-            _utils.parallel(series, parallelCount, this.resolveSingleSeriesBrief);
+            console.log('series: ',series);
+
+            await _utils.parallel(series, parallelCount, this.resolveSingleSeriesBrief.bind(this));
         }
     }
 
@@ -251,21 +245,26 @@ class Spider extends SuperSpider {
             url: series.originalLink,
             headers: this.getHeaders()
         };
-
         try {
             let briefInfos = [];
             let html = await this.downloader.download(requestOptions);
             let $ = cheerio.load(html);
 
-            $('#by-being-sal').each(function () {
-                if($(this).attr("id") === "by-being-sale")
+            $('.carx-list-box').each(function () {
+                console.log('car list div-id : ', $(this).attr("id"));
+                if($(this).attr("id") === "by-being-sale") {
                     return;
+                }
+
                 try {
                     let year = parseInt($(this).attr('id').split('by-year-')[1]);
                     $(this).find('.carx-item').each(function () {
-                        let info, recommend=false, onSale=false, onProduce=false, imagesUrl, configUrl;
+                        let info, recommend=false, onSale=true, onProduce=true, imagesUrl, configUrl;
 
-                        info = _utils.trim($(this).find('.carx-item-table span:first').text());
+                        let objs = $(this).find('.carx-item-table span');
+                        let first = objs[0];    // '.carx-item-table span:first'
+                        let last = objs[2];     // '.carx-item-table span:last'
+                        info = _utils.trim($(first).text());
                         let stateObj = $(this).find('.carx-item-table span i');
                         if(stateObj && stateObj.hasClass('state00')) {
                             recommend = true;
@@ -279,12 +278,12 @@ class Spider extends SuperSpider {
                             onProduce = false;
                         }
 
-                        $(this).find('.carx-item-table span:last').each(function() {
+                        $(last).find('a').each(function() {
                             if($(this).text() === '图片') {
-                                imagesUrl = 'http://www.laosiji.com' + $(this).attr('href');
+                                imagesUrl = self.host + $(this).attr('href');
                             }
                             if($(this).text() === '配置') {
-                                configUrl =  'http://www.laosiji.com' + $(this).attr('href');
+                                configUrl =  self.host + $(this).attr('href');
                             }
                         });
 
@@ -293,10 +292,12 @@ class Spider extends SuperSpider {
                             info: info,
                             year: year,
                             recommend: recommend,
-                            onSell: onSale,
+                            onSale: onSale,
                             onProduce: onProduce,
                             imagesUrl: imagesUrl,
-                            configUrl: configUrl
+                            configUrl: configUrl,
+                            hasImageCrawled: false,
+                            hasConfigCrawled: false
                         });
                     });
                 } catch(error) {
@@ -319,46 +320,85 @@ class Spider extends SuperSpider {
 
         let count = await this.pipeline.count({
             modelName: 'SeriesBrief',
-            where: {}
+            where: {hasCrawled: {$ne: true}}
         });
 
         for(let i=0; i<count;) {
+            await _utils.delay(1000);
+
             let limit = parallelCount;
             let offset = i;
             i += parallelCount;
 
             let series = await this.pipeline.findDocs({
                 modelName: 'SeriesBrief',
-                where: {},
+                where: {hasCrawled: {$ne: true}},
                 limit,
                 offset
             });
 
-            _utils.parallel(series, parallelCount, this.resolveSingleSeriesPic);
+            console.log("series: ", series);
+
+            try {
+                await _utils.parallel(series, parallelCount, this.resolveSingleSeriesPic.bind(this));
+            } catch(error) {
+                console.warn('some error ocurrs');
+            }
         }
     }
 
     async resolveSingleSeriesPic (brief) {
         let self = this;
-        if(!brief.imagesUrl) {
+        //没有图片，直接pass
+        if(!brief.imagesUrl || !_utils.isUrl(brief.imagesUrl, this.host)) {
+            await self.pipeline.updateDocs({
+                modelName: 'SeriesBrief',
+                where: {_id: brief.id},
+                model: {hasImageCrawled: true}
+            });
+
             return null;
         }
 
         let requestOptions = {
             url: brief.imagesUrl,
-            headers: this.getHeaders()
+            headers: this.getHeaders(),
+            timeout: 2*60*1000 //超时时间2min
         };
 
         try {
             let html = await this.downloader.download(requestOptions);
             let $ = cheerio.load(html);
-            $('car-pic-box').each(async function() {
-                let category = _utils.trim($(this).find('h3').text());
-                let moreUlr = 'http://www.laosiji.com' + $(this).find('h3 a').attr('href');
 
-                await self.resolveMoreSeriesPics({
-                    category,
-                    url
+            let objs = [];
+            $('.car-pic-box').each(function() {
+                objs.push(this);
+            });
+
+            //一个系列的车图片有四种，每次并行一个
+            _utils.parallel(objs, 1, async function (obj) {
+                let category = _utils.trim($(obj).find('h3').text()).slice(0,2);
+                let moreUrl = self.host + $(obj).find('h3 a').attr('href');
+
+
+                let images = await self.resolveSeriesThumbnails({url: moreUrl});
+                let pics = {
+                    seriesBriefId: brief.id,
+                    category: category,
+                    images: images
+                };
+
+                // console.log('pics: ', pics);
+
+                await self.pipeline.save({
+                    modelName: 'SeriesImage',
+                    data: pics
+                });
+
+                await self.pipeline.updateDocs({
+                    modelName: 'SeriesBrief',
+                    where: {_id: brief.id},
+                    model: {hasImageCrawled: true}
                 });
             });
         } catch(error) {
@@ -368,7 +408,18 @@ class Spider extends SuperSpider {
     }
 
     //缩略图
-    async resolveMoreSeriesPics (opts) {
+    /**
+     * 返回格式如：
+     * {
+     *     thumbnails: [],
+     *     standard: [],
+     *     high: []
+     * }
+     * @param opts
+     * @returns {Promise}
+     */
+    async resolveSeriesThumbnails (opts) {
+        let self = this;
         let requestOptions = {
             url: opts.url,
             headers: this.getHeaders()
@@ -377,7 +428,25 @@ class Spider extends SuperSpider {
         try {
             let html = await this.downloader.download(requestOptions);
             let $ = cheerio.load(html);
-            return  $('.car-pic-box > .pic-box > .img-box').find('img').attr('src');
+            let objs = [];
+            $('.car-pic-box > .pic-box > .img-box').each(function() {
+                objs.push(this);
+            });
+
+            //缩略图比较多，需要控制下载的数量
+            let rs = await _utils.parallel(objs, 5, async function(obj) {
+                let image = {};
+                image.thumbnail = $(obj).find('img').attr('src');
+
+                let standardQualityLink = self.host + $(obj).find('a').attr('href');
+                let res = await self.resolveSeriesStandardQuality({url: standardQualityLink});
+                image.standard = res.standard;
+                image.high = res.high;
+
+                return image;
+            });
+
+            return rs;
         } catch(error) {
             console.error(error);
             throw error;
@@ -385,8 +454,156 @@ class Spider extends SuperSpider {
     }
 
     //标清图片
+    async resolveSeriesStandardQuality (opts) {
+        let self = this;
+        let requestOptions = {
+            url: opts.url,
+            headers: this.getHeaders()
+        };
 
-    //标清图片
+        try {
+            let html = await this.downloader.download(requestOptions);
+            let $ = cheerio.load(html);
+            let standardQuality = $('.picinfo-main > img').attr('src');
+            let highQuality = $('.picinfo-right > a').attr('href');
+
+            return {
+                standard: standardQuality,
+                high: highQuality
+            };
+        } catch(error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    async resolveSeriesConfigs () {
+        let parallelCount = 1;
+
+        let count = await this.pipeline.count({
+            modelName: 'SeriesBrief',
+            where: {hasConfigCrawled: {$ne: true}}
+        });
+
+        for(let i=0; i<count;) {
+            await _utils.delay(500);
+
+            let limit = parallelCount;
+            let offset = i;
+            i += parallelCount;
+
+            let series = await this.pipeline.findDocs({
+                modelName: 'SeriesBrief',
+                where: {hasConfigCrawled: {$ne: true}},
+                limit,
+                offset
+            });
+
+            try {
+                await _utils.parallel(series, parallelCount, this.resolveSingleSeriesConfig.bind(this));
+            } catch(error) {
+                console.warn('some error ocurrs');
+            }
+        }
+    }
+
+    async resolveSingleSeriesConfig (brief) {
+        let self = this;
+        //没有配置，直接pass
+        if(!brief.configUrl) {
+            await self.pipeline.updateDocs({
+                modelName: 'SeriesBrief',
+                where: {_id: brief.id},
+                model: {hasConfigCrawled: true}
+            });
+
+            return null;
+        }
+
+        //直接通过接口爬取的headers比网页爬取header特殊些
+        let headers = {
+            "Host": "www.laosiji.com",
+            "Connection": "keep-alive",
+            "Content-Length": "11",
+            "Origin": "http://www.laosiji.com",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36",
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            "Accept": "*/*",
+            "Referer": brief.configUrl,
+            "Accept-Encoding": "gzip, deflate",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+            "Cookie": "__DAYU_PP=IRu3ffEInf6avN2Qm3aV3686dac12629; UM_distinctid=15fab7221dc5ce-04e1433c041644-c303767-1fa400-15fab7221dd87d; OdStatisticsToken=c8b92db7-968e-4e90-ab2d-7d525b020cdb-1513951510284; JSESSIONID=5FD5D224E3B009BE7D9E6F5A9A75F03B; CNZZDATA1261736092=1842276921-1510403921-https%253A%252F%252Fwww.baidu.com%252F%7C1514202098"
+        };
+
+        try {
+            //直接通过接口爬取，不通过页面爬取
+            let carsid = brief.configUrl.match(/config\/[0-9]{1,}/g)[0].replace('config/', '').replace('/', '');
+            carsid = parseInt(carsid);
+            let configUrl = this.host + '/api/car/carsconfig';
+
+            let requestOptions = {
+                url: configUrl,
+                headers: headers,
+                method: 'POST',
+                form: {carsid: carsid},
+                timeout: 2*60*1000 //超时时间2min
+            };
+
+            let json = await this.downloader.postDownload(requestOptions);
+            if(typeof json === 'string') {
+                json = JSON.parse(json);
+            }
+
+            let configList = json.body.configs.list;
+
+            await _utils.parallel(configList, 10, async function (config) {
+                //一个config list解析错误，不要影响其他的
+                try {
+                    let configEntity = {};
+
+                    let specName = config.spec_name.split(' ').slice(1).join(' ');
+                    console.log(`specName: `, specName);
+                    let seriesBrief = await self.pipeline.findOneDoc({
+                        modelName: 'SeriesBrief',
+                        where: {
+                            info: {
+                                $regex: new RegExp(specName)
+                            }
+                        }
+                    });
+
+                    configEntity.seriesBriefId = seriesBrief.id;
+                    configEntity.details = {};
+
+                    for(let item of config.items) {
+                        if(!configEntity.details[item.name]) {
+                            configEntity.details[item.name] = []
+                        }
+
+                        for(let conf of item.confs) {
+                            configEntity.details[item.name].push({[conf.sub]: conf.value});
+                        }
+                    }
+
+                    await self.pipeline.saveOne({
+                        modelName: 'SeriesConfig',
+                        data: configEntity
+                    });
+
+                    await self.pipeline.updateOneDoc({
+                        modelName: 'SeriesBrief',
+                        where: {id: seriesBrief.id},
+                        model: {hasConfigCrawled: true}
+                    });
+                } catch(error) {
+                    console.error(error);
+                }
+            });
+
+        } catch(error) {
+            console.error(error);
+        }
+    }
 }
 
 module.exports = Spider;

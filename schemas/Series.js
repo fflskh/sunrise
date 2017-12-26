@@ -14,13 +14,10 @@ const seriesSchema = new Schema({
     thumbnail: {type: Schema.Types.Mixed, desc: '缩略图'},
     originalLink: {type: String, desc: '原始链接'},
 
+
+    ////////////
     state: {type: String, desc: '售卖状态：在售、停售、未售'},
     years: [{type: String, desc: '年份'}],
-    // images: [{
-    //     type: {type: String, desc: '描述，例如外观、内饰、细节等'},
-    //     url: {type: String},
-    //     extra: {type: Schema.Types.Mixed}
-    // }],
     displacement: {type: String, desc:'排量'},
     colors: [{type: String}],
     stars: {type: Number, desc: '评分'},

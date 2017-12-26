@@ -12,6 +12,7 @@ describe('Spider ',function() {
     });
 
     after(function (done) {
+        // process.exit(0);
         done();
     });
 

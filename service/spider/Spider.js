@@ -1,10 +1,9 @@
 const Promise = require('bluebird');
-
 const Scheduler = require('./Scheduler');
 const Downloader = require('./Downloader');
 const Pipeline = require('./Pipeline');
 
-class Spider {
+class Spider{
     constructor () {
         this.scheduler = new Scheduler();
         this.downloader = new Downloader();
