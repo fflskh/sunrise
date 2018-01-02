@@ -513,7 +513,7 @@ class Spider extends SuperSpider {
         let self = this;
         //没有配置，直接pass
         if(!brief.configUrl || !_utils.isUrl(brief.imagesUrl, this.host)) {
-            await self.pipeline.findOneDoc({
+            await self.pipeline.updateOneDoc({
                 modelName: 'SeriesBrief',
                 where: {_id: brief._id},
                 model: {hasConfigCrawled: true}
@@ -546,7 +546,7 @@ class Spider extends SuperSpider {
             } catch(error) {
                 //说明config url有问题
                 console.warn(error);
-                await self.pipeline.findOneDoc({
+                await self.pipeline.updateOneDoc({
                     modelName: 'SeriesBrief',
                     where: {_id: brief._id},
                     model: {hasConfigCrawled: true}
