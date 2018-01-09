@@ -24,6 +24,8 @@ class Pipeline {
 
         let Model = require(_base + `models/${modelName}`);
 
+        console.log(`save to model '${modelName}', with data %j`, data);
+
         if(!Array.isArray(data)) {
             data = [data];
         }

@@ -1,5 +1,5 @@
 /**
- * 生产厂商，例如华晨宝马、进口宝马、宝马M等
+ * 省份
  */
 const Schema = require('mongoose').Schema;
 

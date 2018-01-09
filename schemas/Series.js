@@ -13,6 +13,7 @@ const seriesSchema = new Schema({
     },
     thumbnail: {type: Schema.Types.Mixed, desc: '缩略图'},
     originalLink: {type: String, desc: '原始链接'},
+    hasDealerCrawled: {type: Boolean, desc: '是否爬取了经销商数据'},
 
 
     ////////////

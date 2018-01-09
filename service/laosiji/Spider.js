@@ -3,11 +3,14 @@ const iconv = require('iconv-lite');
 const fs = require('fs');
 
 const SuperSpider = require('../spider/Spider');
+const Pipeline = require('./Pipeline');
 
 class Spider extends SuperSpider {
     constructor() {
         super();
+        this.pipeline = new Pipeline();
         this.host = 'http://www.laosiji.com';
+        this.hostWithoutHTTP = 'www.laosiji.com';
     }
 
     getHeaders () {
@@ -25,6 +28,9 @@ class Spider extends SuperSpider {
     }
 
     async crawl () {
+        //城市
+        await this.getCities();
+
         //选车条件和车辆品牌
         // let [conditions, brands] = await Promise.all([
         //     this.resolveConditions(),
@@ -49,10 +55,12 @@ class Spider extends SuperSpider {
         // await this.resolveSeriesBriefs();
 
         //每个系列对应的配置和图片
-        await Promise.all([
-            this.resolveSeriesConfigs(),
+        // await Promise.all([
+            // this.resolveSeriesConfigs(),
             // this.resolveSeriesPics()
-        ]);
+        // ]);
+
+        await this.getDealers();
     }
 
     async resolveConditions () {
@@ -626,6 +634,181 @@ class Spider extends SuperSpider {
 
         } catch(error) {
             console.error(error);
+        }
+    }
+
+    async getCities () {
+        let requestOptions = {
+            url: this.host + '/Od-Car-API/city.json',
+            headers: this.getHeaders()
+        };
+
+        try {
+            let json = await this.downloader.download(requestOptions);
+            if(typeof json === 'string') {
+                json = JSON.parse(json);
+            }
+
+            await this.pipeline.save({
+                modelName: 'Province',
+                data: json.data
+            });
+        } catch(error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    async getDealers () {
+        let parallelCount = 1;
+
+        try {
+            let count = await this.pipeline.count({
+                modelName: 'Series',
+                where: {hasDealerCrawled: {$ne: true}}
+            });
+
+            for(let i=0; i<count;) {
+                await _utils.delay(300);
+
+                let limit = parallelCount;
+                let offset = i;
+                i += parallelCount;
+
+                let series = await this.pipeline.findDocs({
+                    modelName: 'Series',
+                    where: {hasDealerCrawled: {$ne: true}},
+                    limit,
+                    offset
+                });
+
+                // console.log("series: ", series);
+
+                try {
+                    await _utils.parallel(series, parallelCount, this.resolveSingleSeriesDealers.bind(this));
+                } catch(error) {
+                    console.warn('some error ocurrs');
+                }
+            }
+        } catch(error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    async resolveSingleSeriesDealers (series) {
+        let self = this;
+        let headers = {
+            "Accept": "*/*",
+            "Accept-Encoding":"gzip, deflate",
+            "Accept-Language":"zh-CN,zh;q=0.9",
+            "Connection":"keep-alive",
+            "Content-Length":0,
+            "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+            "Cookie":"__DAYU_PP=IRu3ffEInf6avN2Qm3aV3686dac12629; UM_distinctid=15fab7221dc5ce-04e1433c041644-c303767-1fa400-15fab7221dd87d; OdStatisticsToken=c8b92db7-968e-4e90-ab2d-7d525b020cdb-1513951510284; CNZZDATA1261736092=1842276921-1510403921-https%253A%252F%252Fwww.baidu.com%252F%7C1515503577; JSESSIONID=1E5ABAB8806BB1EB08405996B1734BFC",
+            "Host":"",
+            "Origin":"",
+            "Referer":"",
+            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36"
+        };
+
+        try {
+            //没有origin link
+            if(!series.originalLink) {
+                return await self.pipeline.updateOneDoc({
+                    modelName: 'Series',
+                    where: {_id: series._id},
+                    model: {hasDealerCrawled: true}
+                });
+            }
+            //直接通过接口爬取，不通过页面爬取
+            let seriesid = series.originalLink.match(/series\/[0-9]{1,}/g)[0].replace('series/', '').replace('/', '');
+            seriesid = parseInt(seriesid);
+
+            //说明origin link有问题
+            if(!seriesid) {
+                return await self.pipeline.updateOneDoc({
+                    modelName: 'Series',
+                    where: {_id: series._id},
+                    model: {hasDealerCrawled: true}
+                });
+            }
+
+            //按省份爬
+            let provinces = await this.pipeline.findDocs({
+                modelName: 'Province',
+                where: {}
+            });
+
+            await _utils.parallel(provinces, 2, async function(province) {
+                let cities = province.list;
+                if(!cities.length) {
+                    //直辖市
+                    cities.push({
+                        cityid: province.provinceid
+                    });
+                }
+
+                await _utils.parallel(cities, 5, async function (city) {
+                    let configUrl = self.host + '/dealer/list';
+                    let queryString = `seriesid=${seriesid}&cityid=${city.cityid}`;
+                    headers["Content-Length"] = queryString.length;
+                    headers.Host = self.hostWithoutHTTP;
+                    headers.Origin = self.host;
+                    headers.Referer = series.originalLink;
+
+                    let requestOptions = {
+                        url: configUrl,
+                        headers: headers,
+                        method: 'POST',
+                        form: queryString,
+                        timeout: 60 * 1000 //超时时间1min
+                    };
+
+                    let json = await self.downloader.postDownload(requestOptions);
+                    if(typeof json === 'string') {
+                        json = JSON.parse(json);
+                    }
+
+                    let dealers = [];
+                    let hotdealers = json.body.hotdealers || [];
+                    let normaldealers = json.body.normaldealers || [];
+                    let allDealers = hotdealers.concat(normaldealers);
+
+                    allDealers.forEach(dealer => {
+                        let data = {};
+                        data.seriesIds = [seriesid];
+                        data.cityid = dealer.cityid ? parseInt(dealer.cityid) : null;
+                        data.baidulat = dealer.baidulat ? parseFloat(dealer.baidulat) : null;
+                        data.baidulon = dealer.baidulon ? parseFloat(dealer.baidulon) : null;
+                        data.address = dealer.dealeraddress;
+                        data.businessLicense = dealer.dealerbusinessLicense;
+                        data.linkman = dealer.dealerlinkman;
+                        data.mobile = dealer.dealermobile;
+                        data.name = dealer.dealername;
+                        data.owner = dealer.dealerowner;
+                        data.originalId = dealer.id ? parseInt(dealer.id) : null;
+                        data.ontop = dealer.ontop ? parseInt(dealer.ontop) : 0;
+                        data.ontoptime = dealer.ontoptime;
+                        data.provinceid = province.provinceid;
+                        data.shortname = dealer.shortname;
+                        data.status = dealer.status || 0;
+
+                        dealers.push(data);
+                    });
+
+                    return await self.pipeline.upsertDealers({models: dealers});
+                });
+            });
+
+            return await self.pipeline.updateOneDoc({
+                modelName: 'Series',
+                where: {_id: series._id},
+                model: {hasDealerCrawled: true}
+            });
+        } catch(error) {
+            console.error(error);
+            throw error;
         }
     }
 }
