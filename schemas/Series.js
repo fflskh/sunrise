@@ -4,21 +4,21 @@
 const Schema = require('mongoose').Schema;
 
 const seriesSchema = new Schema({
-    bigSeriesId: {type: Number, desc:'大分类名称'},
+    factoryId: {type: Schema.Types.ObjectId, desc:'大分类名称'},
     name: {type: String, desc: '系列名称'},
+    //指导价
     guidancePrice: {
         min: Number,
-        max: Number,
-        desc: '指导价'
+        max: Number
     },
     thumbnail: {type: Schema.Types.Mixed, desc: '缩略图'},
+    originalLink: {type: String, desc: '原始链接'},
+    hasDealerCrawled: {type: Boolean, desc: '是否爬取了经销商数据'},
+
+
+    ////////////
     state: {type: String, desc: '售卖状态：在售、停售、未售'},
     years: [{type: String, desc: '年份'}],
-    // images: [{
-    //     type: {type: String, desc: '描述，例如外观、内饰、细节等'},
-    //     url: {type: String},
-    //     extra: {type: Schema.Types.Mixed}
-    // }],
     displacement: {type: String, desc:'排量'},
     colors: [{type: String}],
     stars: {type: Number, desc: '评分'},

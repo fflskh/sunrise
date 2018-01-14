@@ -7,7 +7,7 @@
     "port": 6379
   },
   "mongodb": {
-    "uri": "mongodb://localhost:27017/sunrise",
+    "uri": "mongodb://sunrise:sunrise_123456@localhost:27017/sunrise",
     "options": {
       "useMongoClient": true,
       "autoIndex": false,
@@ -20,6 +20,18 @@
       "minimize": false,
       "versionKey": false,
       "timestamps": true
+    }
+  },
+  "spider": {
+    "kue": {
+      "priority": "high",
+      "attempts": 3,
+      "backoff": {
+        "enable": true,
+        "delay": 30000,
+        "type":"fixed"
+      },
+      "concurrency": 10
     }
   }
 }
